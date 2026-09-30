@@ -14,6 +14,7 @@ import {
   Menu,
   Microscope,
   Moon,
+  Play,
   Search,
   Settings,
   Sparkles,
