@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useState } from "react";
 import {
   Activity,
   ArrowRight,
@@ -12,7 +14,6 @@ import {
   Menu,
   Microscope,
   Moon,
-  Play,
   Search,
   Settings,
   Sparkles,
@@ -21,7 +22,6 @@ import {
   Wind,
   X,
 } from "lucide-react";
-import { useState } from "react";
 
 const systems = [
   {
@@ -263,6 +263,7 @@ export default function HomePage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
                   Continue learning
                 </p>
+
                 <h2 className="mt-1 text-2xl font-bold">
                   Your physiology journey
                 </h2>
@@ -279,9 +280,7 @@ export default function HomePage() {
               <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-slate-500">
-                      Current module
-                    </p>
+                    <p className="text-sm text-slate-500">Current module</p>
 
                     <h3 className="mt-1 text-xl font-semibold">
                       Cardiovascular Physiology
@@ -441,48 +440,16 @@ export default function HomePage() {
             </div>
 
             <div className="grid gap-5 md:grid-cols-3">
-              <button className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 text-left transition hover:border-rose-400/20 hover:bg-rose-400/[0.03]">
-                <HeartPulse
-                  size={25}
-                  className="text-rose-400"
-                />
+              {/* Cardiac Output Lab */}
+              <Link
+                href="/cardiovascular"
+                className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 text-left transition hover:border-rose-400/20 hover:bg-rose-400/[0.03]"
+              >
+                <HeartPulse size={25} className="text-rose-400" />
 
                 <h3 className="mt-5 font-semibold">
                   Cardiac Output Lab
                 </h3>
-
-                <Link href="/baroreflex"
-                  className="group rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.04]">
-                  
-  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
-    <Activity size={20} />
-  </div>
-
-  <p className="mt-5 text-xs uppercase tracking-[0.18em] text-slate-500">
-    Cardiovascular
-  </p>
-
-  <h3 className="mt-2 text-lg font-semibold">
-    Baroreceptor Reflex
-  </h3>
-
-  <p className="mt-2 text-sm leading-6 text-slate-500">
-    Explore how the nervous system responds to changes in arterial
-    pressure.
-  </p>
-
-  <div className="mt-5 text-sm font-medium text-cyan-400">
-    Enter laboratory →
-  </div>
-</Link>
-
-
-
-
-
-
-
-
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
                   Change heart rate and stroke volume and observe how cardiac
@@ -493,8 +460,36 @@ export default function HomePage() {
                   Run experiment
                   <ArrowRight size={15} />
                 </span>
-              </button>
+              </Link>
 
+              {/* Baroreceptor Reflex Lab */}
+              <Link
+                href="/baroreflex"
+                className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 text-left transition hover:border-cyan-400/30 hover:bg-white/[0.04]"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
+                  <Activity size={20} />
+                </div>
+
+                <p className="mt-5 text-xs uppercase tracking-[0.18em] text-slate-500">
+                  Cardiovascular
+                </p>
+
+                <h3 className="mt-2 text-lg font-semibold">
+                  Baroreceptor Reflex
+                </h3>
+
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Explore how the nervous system responds to changes in
+                  arterial pressure.
+                </p>
+
+                <div className="mt-5 text-sm font-medium text-cyan-400">
+                  Enter laboratory →
+                </div>
+              </Link>
+
+              {/* Gas Exchange Lab */}
               <button className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 text-left transition hover:border-cyan-400/20 hover:bg-cyan-400/[0.03]">
                 <Wind size={25} className="text-cyan-400" />
 
@@ -513,6 +508,7 @@ export default function HomePage() {
                 </span>
               </button>
 
+              {/* Reflex Lab */}
               <button className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 text-left transition hover:border-violet-400/20 hover:bg-violet-400/[0.03]">
                 <Brain size={25} className="text-violet-400" />
 
@@ -544,4 +540,3 @@ export default function HomePage() {
     </main>
   );
 }
-
