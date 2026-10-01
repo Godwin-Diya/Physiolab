@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import {
   Activity,
   ArrowDown,
@@ -12,7 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { MetricCard } from "@/app/components/physiology/MetricCard";
+import { MetricCard } from "@/components/physiology/MetricCard";
 import { SimulationPanel } from "@/components/physiology/SimulationPanel";
 import { SliderControl } from "@/components/physiology/SliderControl";
 
@@ -35,7 +36,9 @@ export default function BaroreflexPage() {
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
+
         {/* Header */}
+
         <header className="mb-8">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-xs font-medium text-cyan-300">
             <Sparkles size={14} />
@@ -65,8 +68,11 @@ export default function BaroreflexPage() {
         </header>
 
         {/* Main simulation */}
+
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+
           {/* Controls */}
+
           <SimulationPanel
             eyebrow="Experiment controls"
             title="Change the physiological conditions"
@@ -94,9 +100,11 @@ export default function BaroreflexPage() {
             </div>
 
             {/* Experimental question */}
+
             <div className="mt-8 rounded-2xl border border-violet-400/10 bg-violet-400/[0.04] p-5">
               <div className="flex items-center gap-2 text-violet-300">
                 <Activity size={17} />
+
                 <span className="text-sm font-semibold">
                   Think before observing
                 </span>
@@ -110,6 +118,7 @@ export default function BaroreflexPage() {
           </SimulationPanel>
 
           {/* Response */}
+
           <SimulationPanel
             eyebrow="Live response"
             title="Autonomic regulation"
@@ -142,6 +151,7 @@ export default function BaroreflexPage() {
             </div>
 
             {/* Activity meter */}
+
             <div className="mt-7">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm text-slate-400">
@@ -166,13 +176,16 @@ export default function BaroreflexPage() {
         </div>
 
         {/* Autonomic balance */}
+
         <section className="mt-6">
           <SimulationPanel
             eyebrow="Autonomic nervous system"
             title="The body adjusts in opposite directions"
           >
             <div className="grid gap-5 md:grid-cols-2">
+
               {/* Parasympathetic */}
+
               <div className="rounded-2xl border border-cyan-400/10 bg-cyan-400/[0.04] p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -207,6 +220,7 @@ export default function BaroreflexPage() {
               </div>
 
               {/* Sympathetic */}
+
               <div className="rounded-2xl border border-rose-400/10 bg-rose-400/[0.04] p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -244,14 +258,34 @@ export default function BaroreflexPage() {
         </section>
 
         {/* Feedback loop */}
+
         <section className="mt-6">
           <SimulationPanel
             eyebrow="Physiological feedback loop"
             title="Follow the signal"
           >
-            <div className="grid gap-4 md:grid-cols-5">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 text-center">
-                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-rose-400/10 text-rose-300">
+            <div className="grid gap-4 md:grid-cols-7">
+
+              {/* Arterial pressure */}
+
+              <div
+                className={`rounded-2xl border p-5 text-center transition-all duration-300 ${
+                  result.pressureDirection === "low"
+                    ? "border-amber-400/30 bg-amber-400/[0.06]"
+                    : result.pressureDirection === "high"
+                      ? "border-rose-400/30 bg-rose-400/[0.06]"
+                      : "border-white/10 bg-white/[0.025]"
+                }`}
+              >
+                <div
+                  className={`mx-auto flex h-11 w-11 items-center justify-center rounded-xl ${
+                    result.pressureDirection === "low"
+                      ? "bg-amber-400/10 text-amber-300"
+                      : result.pressureDirection === "high"
+                        ? "bg-rose-400/10 text-rose-300"
+                        : "bg-cyan-400/10 text-cyan-300"
+                  }`}
+                >
                   <HeartPulse size={21} />
                 </div>
 
@@ -259,17 +293,59 @@ export default function BaroreflexPage() {
                   Arterial pressure
                 </p>
 
-                <p className="mt-1 text-xs text-slate-500">
-                  {arterialPressure} mmHg
+                <p className="mt-1 text-lg font-bold text-white">
+                  {arterialPressure}
+
+                  <span className="ml-1 text-xs font-medium text-slate-500">
+                    mmHg
+                  </span>
+                </p>
+
+                <p
+                  className={`mt-2 text-xs font-medium capitalize ${
+                    result.pressureDirection === "low"
+                      ? "text-amber-300"
+                      : result.pressureDirection === "high"
+                        ? "text-rose-300"
+                        : "text-cyan-300"
+                  }`}
+                >
+                  {result.pressureDirection} pressure
                 </p>
               </div>
 
+              {/* Arrow */}
+
               <div className="hidden items-center justify-center md:flex">
-                <ArrowRight className="text-slate-600" />
+                <ArrowRight
+                  className={`transition-all duration-300 ${
+                    result.pressureDirection === "low"
+                      ? "text-amber-300"
+                      : result.pressureDirection === "high"
+                        ? "text-rose-300"
+                        : "text-slate-600"
+                  }`}
+                />
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 text-center">
-                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300">
+              {/* Baroreceptors */}
+
+              <div
+                className={`rounded-2xl border p-5 text-center transition-all duration-300 ${
+                  result.baroreceptorActivity < 45
+                    ? "border-amber-400/30 bg-amber-400/[0.06]"
+                    : result.baroreceptorActivity > 55
+                      ? "border-cyan-400/30 bg-cyan-400/[0.06]"
+                      : "border-white/10 bg-white/[0.025]"
+                }`}
+              >
+                <div
+                  className={`mx-auto flex h-11 w-11 items-center justify-center rounded-xl ${
+                    result.baroreceptorActivity < 45
+                      ? "bg-amber-400/10 text-amber-300"
+                      : "bg-cyan-400/10 text-cyan-300"
+                  }`}
+                >
                   <Activity size={21} />
                 </div>
 
@@ -277,17 +353,49 @@ export default function BaroreflexPage() {
                   Baroreceptors
                 </p>
 
-                <p className="mt-1 text-xs text-slate-500">
-                  Detect stretch
+                <p className="mt-1 text-lg font-bold text-white">
+                  {Math.round(result.baroreceptorActivity)}%
+                </p>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  Detect vessel wall stretch
                 </p>
               </div>
 
+              {/* Arrow */}
+
               <div className="hidden items-center justify-center md:flex">
-                <ArrowRight className="text-slate-600" />
+                <ArrowRight
+                  className={`transition-all duration-300 ${
+                    result.autonomicDirection === "sympathetic"
+                      ? "text-rose-300"
+                      : result.autonomicDirection === "parasympathetic"
+                        ? "text-cyan-300"
+                        : "text-slate-600"
+                  }`}
+                />
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 text-center">
-                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-violet-400/10 text-violet-300">
+              {/* Autonomic response */}
+
+              <div
+                className={`rounded-2xl border p-5 text-center transition-all duration-300 ${
+                  result.autonomicDirection === "sympathetic"
+                    ? "border-rose-400/30 bg-rose-400/6"
+                    : result.autonomicDirection === "parasympathetic"
+                      ? "border-cyan-400/30 bg-cyan-400/6"
+                      : "border-violet-400/30 bg-violet-400/6"
+                }`}
+              >
+                <div
+                  className={`mx-auto flex h-11 w-11 items-center justify-center rounded-xl ${
+                    result.autonomicDirection === "sympathetic"
+                      ? "bg-rose-400/10 text-rose-300"
+                      : result.autonomicDirection === "parasympathetic"
+                        ? "bg-cyan-400/10 text-cyan-300"
+                        : "bg-violet-400/10 text-violet-300"
+                  }`}
+                >
                   <ShieldCheck size={21} />
                 </div>
 
@@ -295,16 +403,61 @@ export default function BaroreflexPage() {
                   Autonomic response
                 </p>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-lg font-bold capitalize text-white">
+                  {result.autonomicDirection}
+                </p>
+
+                <p className="mt-2 text-xs text-slate-500">
                   Adjusts cardiovascular function
                 </p>
+              </div>
+            </div>
+
+            {/* Direction indicator */}
+
+            <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                    Current reflex direction
+                  </p>
+
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {result.autonomicDirection === "sympathetic"
+                      ? "Increase cardiovascular support"
+                      : result.autonomicDirection === "parasympathetic"
+                        ? "Reduce cardiovascular drive"
+                        : "Maintain balanced autonomic control"}
+                  </p>
+                </div>
+
+                <div
+                  className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                    result.autonomicDirection === "sympathetic"
+                      ? "border-rose-400/20 bg-rose-400/10 text-rose-300"
+                      : result.autonomicDirection === "parasympathetic"
+                        ? "border-cyan-400/20 bg-cyan-400/10 text-cyan-300"
+                        : "border-violet-400/20 bg-violet-400/10 text-violet-300"
+                  }`}
+                >
+                  {result.autonomicDirection === "sympathetic" ? (
+                    <ArrowUp size={14} />
+                  ) : result.autonomicDirection === "parasympathetic" ? (
+                    <ArrowDown size={14} />
+                  ) : (
+                    <ShieldCheck size={14} />
+                  )}
+
+                  {result.autonomicDirection}
+                </div>
               </div>
             </div>
           </SimulationPanel>
         </section>
 
         {/* Response explanation */}
-        <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_1fr]">
+
+        <section className="mt-6 grid gap-6 lg:grid-cols-2">
           <SimulationPanel
             eyebrow="What is happening?"
             title={result.response}
@@ -328,6 +481,7 @@ export default function BaroreflexPage() {
         </section>
 
         {/* Footer */}
+
         <footer className="mt-12 border-t border-white/10 py-8 text-center">
           <p className="text-xs text-slate-600">
             Physiolab · Interactive Human Physiology Learning Platform
