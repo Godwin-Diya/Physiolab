@@ -10,7 +10,7 @@ unit: string;
 onChange: (value: number) => void;
 }
 
-export default function SliderControl({
+export function SliderControl({
 label,
 description,
 value,

@@ -14,8 +14,11 @@ import {
 } from "lucide-react";
 
 import { MetricCard } from "@/components/physiology/MetricCard";
+
 import { SimulationPanel } from "@/components/physiology/SimulationPanel";
+
 import { SliderControl } from "@/components/physiology/SliderControl";
+
 
 import { calculateBaroreflex } from "@/lib/physiology/baroreflex";
 
@@ -59,7 +62,7 @@ export default function BaroreflexPage() {
 
             <button
               onClick={resetExperiment}
-              className="inline-flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.07] hover:text-white"
+              className="inline-flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.07] hover:text-white"
             >
               <RotateCcw size={16} />
               Reset experiment
@@ -101,7 +104,7 @@ export default function BaroreflexPage() {
 
             {/* Experimental question */}
 
-            <div className="mt-8 rounded-2xl border border-violet-400/10 bg-violet-400/[0.04] p-5">
+            <div className="mt-8 rounded-2xl border border-violet-400/10 bg-violet-400/4 p-5">
               <div className="flex items-center gap-2 text-violet-300">
                 <Activity size={17} />
 
@@ -186,7 +189,7 @@ export default function BaroreflexPage() {
 
               {/* Parasympathetic */}
 
-              <div className="rounded-2xl border border-cyan-400/10 bg-cyan-400/[0.04] p-5">
+              <div className="rounded-2xl border border-cyan-400/10 bg-cyan-400/4 p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="rounded-xl bg-cyan-400/10 p-3 text-cyan-300">
@@ -221,7 +224,7 @@ export default function BaroreflexPage() {
 
               {/* Sympathetic */}
 
-              <div className="rounded-2xl border border-rose-400/10 bg-rose-400/[0.04] p-5">
+              <div className="rounded-2xl border border-rose-400/10 bg-rose-400/4 p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="rounded-xl bg-rose-400/10 p-3 text-rose-300">
@@ -271,10 +274,10 @@ export default function BaroreflexPage() {
               <div
                 className={`rounded-2xl border p-5 text-center transition-all duration-300 ${
                   result.pressureDirection === "low"
-                    ? "border-amber-400/30 bg-amber-400/[0.06]"
+                    ? "border-amber-400/30 bg-amber-400/6"
                     : result.pressureDirection === "high"
-                      ? "border-rose-400/30 bg-rose-400/[0.06]"
-                      : "border-white/10 bg-white/[0.025]"
+                      ? "border-rose-400/30 bg-rose-400/6"
+                      : "border-white/10 bg-white/2.5"
                 }`}
               >
                 <div
@@ -333,10 +336,10 @@ export default function BaroreflexPage() {
               <div
                 className={`rounded-2xl border p-5 text-center transition-all duration-300 ${
                   result.baroreceptorActivity < 45
-                    ? "border-amber-400/30 bg-amber-400/[0.06]"
+                    ? "border-amber-400/30 bg-amber-400/6"
                     : result.baroreceptorActivity > 55
-                      ? "border-cyan-400/30 bg-cyan-400/[0.06]"
-                      : "border-white/10 bg-white/[0.025]"
+                      ? "border-cyan-400/30 bg-cyan-400/6"
+                      : "border-white/10 bg-white/2.5"
                 }`}
               >
                 <div
@@ -415,7 +418,7 @@ export default function BaroreflexPage() {
 
             {/* Direction indicator */}
 
-            <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+            <div className="mt-5 rounded-2xl border border-white/10 bg-white/2.5 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">

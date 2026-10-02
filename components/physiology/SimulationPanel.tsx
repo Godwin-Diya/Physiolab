@@ -7,7 +7,7 @@ children: ReactNode;
 className?: string;
 }
 
-export default function SimulationPanel({
+export  function SimulationPanel({
 title,
 eyebrow,
 children,
@@ -15,7 +15,7 @@ className = "",
 }: SimulationPanelProps) {
 return (
     <section
-    className={`rounded-3xl border border-white/10 bg-white/[0.025] p-6 sm:p-8 ${className}`}
+    className={`rounded-3xl border border-white/10 bg-white/2.5 p-6 sm:p-8 ${className}`}
     >
     {eyebrow && (
         <p className="text-xs uppercase tracking-[0.2em] text-slate-500">

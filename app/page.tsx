@@ -466,7 +466,7 @@ export default function HomePage() {
               {/* Baroreceptor Reflex Lab */}
               <Link
                 href="/baroreflex"
-                className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 text-left transition hover:border-cyan-400/30 hover:bg-white/[0.04]"
+                className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-cyan-400/30 hover:bg-white/4"
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
                   <Activity size={20} />
