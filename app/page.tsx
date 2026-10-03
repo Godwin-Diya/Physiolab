@@ -197,7 +197,7 @@ export default function HomePage() {
             <input
               type="text"
               placeholder="Search physiology..."
-              className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/40"
+              className="h-11 w-full rounded-xl border border-white/10 bg-white/3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/40"
             />
           </div>
 
@@ -212,7 +212,7 @@ export default function HomePage() {
                 <p className="text-xs text-slate-500">Learner</p>
               </div>
 
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-300 to-blue-500 font-bold text-slate-950">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-cyan-300 to-blue-500 font-bold text-slate-950">
                 P
               </div>
             </div>
@@ -221,7 +221,7 @@ export default function HomePage() {
 
         <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
           {/* Hero */}
-          <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0d2033] via-[#0a1828] to-[#07111f] p-7 sm:p-10">
+          <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-[#0d2033] via-[#0a1828] to-[#07111f] p-7 sm:p-10">
             <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
             <div className="absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
 
@@ -249,7 +249,7 @@ export default function HomePage() {
                   Start exploring
                 </button>
 
-                <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-medium text-white transition hover:bg-white/[0.07]">
+                <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/[0.07]">
                   View simulations
                   <ArrowRight size={16} />
                 </button>
@@ -278,7 +278,7 @@ export default function HomePage() {
 
             <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
               {/* Progress card */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
+              <div className="rounded-2xl border border-white/10 bg-white/2.5 p-6">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm text-slate-500">Current module</p>
@@ -328,7 +328,7 @@ export default function HomePage() {
               </div>
 
               {/* Daily challenge */}
-              <div className="rounded-2xl border border-violet-400/10 bg-violet-400/[0.04] p-6">
+              <div className="rounded-2xl border border-violet-400/10 bg-violet-400/4 p-6">
                 <div className="flex items-center justify-between">
                   <div className="rounded-xl bg-violet-400/10 p-3 text-violet-300">
                     <Trophy size={22} />
@@ -382,7 +382,7 @@ export default function HomePage() {
                 return (
                   <article
                     key={system.name}
-                    className={`group rounded-2xl border ${system.border} bg-white/[0.025] p-5 transition duration-300 hover:-translate-y-1 hover:bg-white/[0.04]`}
+                    className={`group rounded-2xl border ${system.border} bg-white/2.5 p-5 transition duration-300 hover:-translate-y-1 hover:bg-white/4`}
                   >
                     <div
                       className={`flex h-11 w-11 items-center justify-center rounded-xl ${system.background} ${system.color}`}
@@ -392,7 +392,7 @@ export default function HomePage() {
 
                     <h3 className="mt-5 font-semibold">{system.name}</h3>
 
-                    <p className="mt-2 min-h-[72px] text-sm leading-6 text-slate-500">
+                    <p className="mt-2 min-h-18 text-sm leading-6 text-slate-500">
                       {system.description}
                     </p>
 
@@ -444,7 +444,7 @@ export default function HomePage() {
               {/* Cardiac Output Lab */}
               <Link
                 href="/cardiovascular"
-                className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 text-left transition hover:border-rose-400/20 hover:bg-rose-400/[0.03]"
+                className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-rose-400/20 hover:bg-rose-400/3"
               >
                 <HeartPulse size={25} className="text-rose-400" />
 
@@ -491,7 +491,7 @@ export default function HomePage() {
               </Link>
 
               {/* Gas Exchange Lab */}
-              <button className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 text-left transition hover:border-cyan-400/20 hover:bg-cyan-400/[0.03]">
+              <button className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-cyan-400/20 hover:bg-cyan-400/3">
                 <Wind size={25} className="text-cyan-400" />
 
                 <h3 className="mt-5 font-semibold">
@@ -510,7 +510,7 @@ export default function HomePage() {
               </button>
 
               {/* Reflex Lab */}
-              <button className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 text-left transition hover:border-violet-400/20 hover:bg-violet-400/[0.03]">
+              <button className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-violet-400/20 hover:bg-violet-400/3">
                 <Brain size={25} className="text-violet-400" />
 
                 <h3 className="mt-5 font-semibold">

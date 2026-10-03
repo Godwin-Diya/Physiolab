@@ -1,8 +1,8 @@
 type MetricCardProps = {
-  label: string;
-  value: string | number;
-  unit?: string;
-  highlighted?: boolean;
+label: string;
+value: string | number;
+unit?: string;
+highlighted?: boolean;
 };
 
 export function MetricCard({
