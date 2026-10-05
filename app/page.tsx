@@ -249,7 +249,7 @@ export default function HomePage() {
                   Start exploring
                 </button>
 
-                <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/[0.07]">
+                <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/7">
                   View simulations
                   <ArrowRight size={16} />
                 </button>
@@ -491,7 +491,10 @@ export default function HomePage() {
               </Link>
 
               {/* Gas Exchange Lab */}
-              <button className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-cyan-400/20 hover:bg-cyan-400/3">
+              <Link
+                href="/respiratory"
+                className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-cyan-400/20 hover:bg-cyan-400/3"
+              >
                 <Wind size={25} className="text-cyan-400" />
 
                 <h3 className="mt-5 font-semibold">
@@ -507,7 +510,7 @@ export default function HomePage() {
                   Run experiment
                   <ArrowRight size={15} />
                 </span>
-              </button>
+              </Link>
 
               {/* Reflex Lab */}
               <button className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-violet-400/20 hover:bg-violet-400/3">

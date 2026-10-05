@@ -17,10 +17,9 @@ import { MetricCard } from "@/components/physiology/MetricCard";
 
 import { SimulationPanel } from "@/components/physiology/SimulationPanel";
 
-import { SliderControl } from "@/components/physiology/SliderControl";
+import { SliderControl } from "@/components/physiology/SliderControl";import { calculateBaroreflex } from "@/lib/physiology/baroreflex";
 
-
-import { calculateBaroreflex } from "@/lib/physiology/baroreflex";
+import { ExperimentChallenge } from "@/components/physiology/ExperimentChallenge";
 
 export default function BaroreflexPage() {
   const [arterialPressure, setArterialPressure] = useState(100);
@@ -482,6 +481,29 @@ export default function BaroreflexPage() {
             </p>
           </SimulationPanel>
         </section>
+        
+        <ExperimentChallenge
+        question="Arterial pressure suddenly falls. What should happen to sympathetic activity?"
+        description="Think about the baroreceptor reflex before checking the simulation response."
+        options={[
+        {
+        label: "Decrease",
+        value: "decrease",
+        },
+        {
+        label: "Increase",
+        value: "increase",
+        },
+        {
+        label: "Stay approximately the same",
+        value: "same",
+        },
+        ]}
+        correctAnswer="increase"
+        explanation="A fall in arterial pressure reduces baroreceptor firing. This decreases parasympathetic influence and increases sympathetic activity, helping restore arterial pressure."
+        observation="Lower the arterial pressure slider and watch how the autonomic balance shifts toward sympathetic activity."
+        />
+
 
         {/* Footer */}
 
