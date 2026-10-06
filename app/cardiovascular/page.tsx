@@ -21,6 +21,16 @@ import {
   YAxis,
 } from "recharts";
 
+import { MetricCard } from "@/components/physiology/MetricCard";
+
+import { SimulationPanel } from "@/components/physiology/SimulationPanel";
+
+import { SliderControl } from "@/components/physiology/SliderControl";import { calculateBaroreflex } from "@/lib/physiology/baroreflex";
+
+import { ExperimentChallenge } from "@/components/physiology/ExperimentChallenge";
+
+
+
 export default function CardiovascularPage() {
   const [heartRate, setHeartRate] = useState(70);
   const [strokeVolume, setStrokeVolume] = useState(70);
@@ -512,6 +522,28 @@ export default function CardiovascularPage() {
             </div>
           </div>
         </section>
+
+        <ExperimentChallenge
+        question="If heart rate increases while stroke volume stays constant, what should happen to cardiac output?"
+        description="Use the cardiac output relationship to make your prediction before changing the simulation."
+        options={[
+        {
+        label: "Cardiac output decreases",
+        value: "decrease",
+        },
+        {
+        label: "Cardiac output increases",
+        value: "increase",
+        },
+        {
+        label: "Cardiac output stays approximately the same",
+        value: "same",
+        },
+        ]}
+        correctAnswer="increase"
+        explanation="Cardiac output equals heart rate multiplied by stroke volume. When stroke volume stays constant, increasing heart rate increases the amount of blood pumped by the heart each minute."
+        observation="Increase the heart rate slider while keeping stroke volume unchanged. Watch the cardiac output value and chart respond."
+        />
 
         {/* Equation */}
         <section className="mt-6 rounded-3xl border border-white/10 bg-gradient-to-r from-cyan-400/[0.05] to-blue-500/[0.05] p-8 text-center">

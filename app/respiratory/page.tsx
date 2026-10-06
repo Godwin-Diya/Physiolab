@@ -14,7 +14,6 @@ import {
 import { MetricCard } from "@/components/physiology/MetricCard";
 import { SimulationPanel } from "@/components/physiology/SimulationPanel";
 import { SliderControl } from "@/components/physiology/SliderControl";
-
 import { calculateGasExchange } from "@/lib/physiology/respiratory";
 
 export default function RespiratoryPage() {
