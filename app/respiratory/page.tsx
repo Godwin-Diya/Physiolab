@@ -15,6 +15,7 @@ import { MetricCard } from "@/components/physiology/MetricCard";
 import { SimulationPanel } from "@/components/physiology/SimulationPanel";
 import { SliderControl } from "@/components/physiology/SliderControl";
 import { calculateGasExchange } from "@/lib/physiology/respiratory";
+import { ExperimentChallenge } from "@/components/physiology/ExperimentChallenge";
 
 export default function RespiratoryPage() {
   const [alveolarOxygen, setAlveolarOxygen] = useState(100);
@@ -335,6 +336,29 @@ export default function RespiratoryPage() {
             </p>
           </SimulationPanel>
         </section>
+
+<ExperimentChallenge
+  question="If alveolar ventilation increases, what generally happens to carbon dioxide removal?"
+  description="Think about how ventilation moves fresh air into the alveoli before checking your prediction."
+  options={[
+    {
+      label: "Carbon dioxide removal decreases",
+      value: "decrease",
+    },
+    {
+      label: "Carbon dioxide removal increases",
+      value: "increase",
+    },
+    {
+      label: "Carbon dioxide removal stays approximately the same",
+      value: "same",
+    },
+  ]}
+  correctAnswer="increase"
+  explanation="Increasing ventilation brings more fresh gas into the alveoli. In this simplified model, this supports greater carbon dioxide removal from the alveolar space."
+  observation="Increase the ventilation slider and observe how the gas-exchange indicators respond."
+/>
+
 
         {/* Footer */}
         <footer className="mt-12 border-t border-white/10 pt-6">
