@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Activity,
@@ -14,6 +14,14 @@ import {
 } from "lucide-react";
 
 import { experiments } from "@/lib/physiology/experiments";
+
+import {
+  getProgress,
+  updateExperimentStatus,
+  getCompletedCount,
+  getCompletionPercentage,
+  type ExperimentProgress,
+} from "@/lib/physiology/progress";
 
 const systemIcons: Record<string, typeof HeartPulse> = {
   Cardiovascular: HeartPulse,
@@ -49,11 +57,20 @@ const experimentRoutes: Record<string, string> = {
 
 export default function ExperimentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSystem, setSelectedSystem] = useState("All systems");
+    const [selectedSystem, setSelectedSystem] = useState("All systems");
+    const [progress, setProgress] = useState<ExperimentProgress>({});
+const [progressLoaded, setProgressLoaded] = useState(false);
+
+useEffect(() => {
+  setProgress(getProgress());
+  setProgressLoaded(true);
+}, []);
 
   const systems = [
     "All systems",
-    ...Array.from(new Set(experiments.map((experiment) => experiment.system))),
+    ...Array.from(
+      new Set(experiments.map((experiment) => experiment.system))
+    ),
   ];
 
   const filteredExperiments = experiments.filter((experiment) => {
@@ -75,14 +92,17 @@ export default function ExperimentsPage() {
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
-
         {/* Header */}
         <header className="mb-10 flex items-center justify-between">
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
           >
-            <ArrowRight className="rotate-180" size={16} />
+            <ArrowRight
+              size={16}
+              className="rotate-180"
+            />
+
             Back to dashboard
           </Link>
 
@@ -95,19 +115,22 @@ export default function ExperimentsPage() {
           </div>
         </header>
 
-        {/* Hero section */}
+        {/* Hero */}
         <section className="relative mb-10 overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-cyan-400/10 via-slate-900 to-blue-500/10 p-7 sm:p-10 lg:p-12">
           <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
 
           <div className="relative z-10 max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-medium text-cyan-300">
               <FlaskConical size={14} />
+
               Interactive learning laboratory
             </div>
 
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
               The Experiment
-              <span className="block text-cyan-300">Hub.</span>
+              <span className="block text-cyan-300">
+                Hub.
+              </span>
             </h1>
 
             <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
@@ -168,6 +191,7 @@ export default function ExperimentsPage() {
                     key={system}
                     type="button"
                     onClick={() => setSelectedSystem(system)}
+                    aria-pressed={isSelected}
                     className={`rounded-xl border px-4 py-2.5 text-xs font-medium transition ${
                       isSelected
                         ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-300"
@@ -219,11 +243,15 @@ export default function ExperimentsPage() {
                     key={experiment.id}
                     className="group flex flex-col rounded-2xl border border-white/10 bg-white/2.5 p-5 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/20 hover:bg-white/5"
                   >
+                    {/* Card heading */}
                     <div className="mb-5 flex items-start justify-between">
                       <div
                         className={`flex h-12 w-12 items-center justify-center rounded-xl border ${style.background} ${style.border}`}
                       >
-                        <Icon size={22} className={style.color} />
+                        <Icon
+                          size={22}
+                          className={style.color}
+                        />
                       </div>
 
                       <span className="rounded-full border border-white/10 bg-white/3 px-3 py-1 text-xs capitalize text-slate-400">
@@ -243,6 +271,7 @@ export default function ExperimentsPage() {
                       {experiment.description}
                     </p>
 
+                    {/* Learning objective */}
                     <div className="mt-5 rounded-xl border border-white/5 bg-white/3 p-3">
                       <p className="mb-1 text-xs font-medium text-slate-300">
                         Learning objective
@@ -253,7 +282,8 @@ export default function ExperimentsPage() {
                       </p>
                     </div>
 
-                    <div className="mt-5 flex items-center justify-between border-t border-white/5 pt-4">
+                    {/* Status and launch */}
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4">
                       <div className="flex items-center gap-2 text-xs text-slate-500">
                         <CheckCircle2
                           size={15}
@@ -275,6 +305,7 @@ export default function ExperimentsPage() {
                           className="inline-flex items-center gap-2 rounded-lg bg-cyan-400/10 px-3 py-2 text-xs font-medium text-cyan-300 transition hover:bg-cyan-400/20"
                         >
                           Enter laboratory
+
                           <ArrowRight
                             size={14}
                             className="transition group-hover:translate-x-0.5"
@@ -371,7 +402,9 @@ export default function ExperimentsPage() {
                   {step.number}
                 </p>
 
-                <h3 className="mt-3 font-medium">{step.title}</h3>
+                <h3 className="mt-3 font-medium">
+                  {step.title}
+                </h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
                   {step.description}
