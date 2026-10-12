@@ -1,7 +1,8 @@
+
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Activity,
@@ -41,7 +42,6 @@ const systemStyles: Record<
     background: "bg-rose-400/10",
     border: "border-rose-400/20",
   },
-
   Respiratory: {
     color: "text-cyan-300",
     background: "bg-cyan-400/10",
@@ -57,19 +57,42 @@ const experimentRoutes: Record<string, string> = {
 
 export default function ExperimentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-    const [selectedSystem, setSelectedSystem] = useState("All systems");
-    const [progress, setProgress] = useState<ExperimentProgress>({});
-const [progressLoaded, setProgressLoaded] = useState(false);
+  const [selectedSystem, setSelectedSystem] =
+    useState("All systems");
 
-useEffect(() => {
-  setProgress(getProgress());
-  setProgressLoaded(true);
-}, []);
+const [progress, setProgress] =
+  useState<ExperimentProgress>(() => getProgress());
+
+const progressLoaded = true;
+
+  function handleToggleComplete(experimentId: string) {
+    const currentStatus =
+      progress[experimentId] ?? "not-started";
+
+    const nextStatus =
+      currentStatus === "completed"
+        ? "in-progress"
+        : "completed";
+
+    const updatedProgress = updateExperimentStatus(
+      experimentId,
+      nextStatus,
+    );
+
+    setProgress(updatedProgress);
+  }
+
+  const completedCount = getCompletedCount(progress);
+
+  const completionPercentage = getCompletionPercentage(
+    progress,
+    experiments.length,
+  );
 
   const systems = [
     "All systems",
     ...Array.from(
-      new Set(experiments.map((experiment) => experiment.system))
+      new Set(experiments.map((experiment) => experiment.system)),
     ),
   ];
 
@@ -98,17 +121,12 @@ useEffect(() => {
             href="/"
             className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
           >
-            <ArrowRight
-              size={16}
-              className="rotate-180"
-            />
-
+            <ArrowRight size={16} className="rotate-180" />
             Back to dashboard
           </Link>
 
           <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/3 px-3 py-2">
             <Activity size={16} className="text-cyan-300" />
-
             <span className="text-xs font-medium text-slate-300">
               Physiolab
             </span>
@@ -116,21 +134,18 @@ useEffect(() => {
         </header>
 
         {/* Hero */}
-        <section className="relative mb-10 overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-cyan-400/10 via-slate-900 to-blue-500/10 p-7 sm:p-10 lg:p-12">
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-cyan-400/10 via-slate-900 to-blue-500/10 p-7 sm:p-10 lg:p-12">
           <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
 
           <div className="relative z-10 max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-medium text-cyan-300">
               <FlaskConical size={14} />
-
               Interactive learning laboratory
             </div>
 
             <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
               The Experiment
-              <span className="block text-cyan-300">
-                Hub.
-              </span>
+              <span className="block text-cyan-300">Hub.</span>
             </h1>
 
             <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
@@ -144,7 +159,6 @@ useEffect(() => {
                 <p className="text-2xl font-semibold">
                   {experiments.length}
                 </p>
-
                 <p className="mt-1 text-xs text-slate-400">
                   Available experiments
                 </p>
@@ -154,12 +168,51 @@ useEffect(() => {
                 <p className="text-2xl font-semibold">
                   {systems.length - 1}
                 </p>
-
                 <p className="mt-1 text-xs text-slate-400">
                   Physiology systems
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Learning progress */}
+        <section
+          aria-label="Your learning progress"
+          className="mb-10 rounded-2xl border border-white/10 bg-white/3 p-5 sm:p-6"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-slate-400">
+                Your learning progress
+              </p>
+
+              <h2 className="mt-1 text-xl font-semibold sm:text-2xl">
+                {completedCount} of {experiments.length} experiments completed
+              </h2>
+
+              <p className="mt-2 text-xs text-slate-500">
+                Keep exploring to build your physiology knowledge.
+              </p>
+            </div>
+
+            <p className="text-3xl font-bold text-emerald-400">
+              {completionPercentage}%
+            </p>
+          </div>
+
+          <div
+            className="mt-5 h-2 overflow-hidden rounded-full bg-white/10"
+            role="progressbar"
+            aria-label="Experiment completion"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={completionPercentage}
+          >
+            <div
+              className="h-full rounded-full bg-linear-to-r from-emerald-400 to-teal-400 transition-all duration-500"
+              style={{ width: `${completionPercentage}%` }}
+            />
           </div>
         </section>
 
@@ -238,6 +291,11 @@ useEffect(() => {
 
                 const route = experimentRoutes[experiment.id];
 
+                const status =
+                  progress[experiment.id] ?? experiment.status;
+
+                const isCompleted = status === "completed";
+
                 return (
                   <article
                     key={experiment.id}
@@ -248,10 +306,7 @@ useEffect(() => {
                       <div
                         className={`flex h-12 w-12 items-center justify-center rounded-xl border ${style.background} ${style.border}`}
                       >
-                        <Icon
-                          size={22}
-                          className={style.color}
-                        />
+                        <Icon size={22} className={style.color} />
                       </div>
 
                       <span className="rounded-full border border-white/10 bg-white/3 px-3 py-1 text-xs capitalize text-slate-400">
@@ -282,23 +337,40 @@ useEffect(() => {
                       </p>
                     </div>
 
-                    {/* Status and launch */}
-                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4">
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                    {/* Status */}
+                    <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/5 pt-4">
+                      <div className="flex items-center gap-2 text-xs text-slate-400">
                         <CheckCircle2
-                          size={15}
+                          size={16}
                           className={
-                            experiment.status === "completed"
+                            isCompleted
                               ? "text-emerald-400"
                               : "text-slate-600"
                           }
                         />
 
                         <span className="capitalize">
-                          {experiment.status.replace("-", " ")}
+                          {status.replace("-", " ")}
                         </span>
                       </div>
 
+                      <button
+                        type="button"
+                        onClick={() => handleToggleComplete(experiment.id)}
+                        disabled={!progressLoaded}
+                        aria-pressed={isCompleted}
+                        className={`rounded-lg border px-3 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                          isCompleted
+                            ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/15"
+                            : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        }`}
+                      >
+                        {isCompleted ? "Completed ✓" : "Mark complete"}
+                      </button>
+                    </div>
+
+                    {/* Laboratory link */}
+                    <div className="mt-4">
                       {route ? (
                         <Link
                           href={route}
@@ -402,9 +474,7 @@ useEffect(() => {
                   {step.number}
                 </p>
 
-                <h3 className="mt-3 font-medium">
-                  {step.title}
-                </h3>
+                <h3 className="mt-3 font-medium">{step.title}</h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
                   {step.description}
