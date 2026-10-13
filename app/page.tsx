@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+
 import {
   Activity,
   ArrowRight,
@@ -24,6 +25,13 @@ import {
   X,
 } from "lucide-react";
 
+import { experiments } from "@/lib/physiology/experiments";
+
+import {
+  getProgress,
+  getCompletedCount,
+} from "@/lib/physiology/progress";
+
 const systems = [
   {
     name: "Cardiovascular",
@@ -34,6 +42,7 @@ const systems = [
     background: "bg-rose-500/10",
     border: "border-rose-500/20",
     progress: 82,
+    href: "/cardiovascular",
   },
   {
     name: "Respiratory",
@@ -44,6 +53,7 @@ const systems = [
     background: "bg-cyan-500/10",
     border: "border-cyan-500/20",
     progress: 64,
+    href: "/respiratory",
   },
   {
     name: "Nervous System",
@@ -54,6 +64,7 @@ const systems = [
     background: "bg-violet-500/10",
     border: "border-violet-500/20",
     progress: 48,
+    href: "/baroreflex",
   },
   {
     name: "Renal",
@@ -64,20 +75,62 @@ const systems = [
     background: "bg-emerald-500/10",
     border: "border-emerald-500/20",
     progress: 35,
+    href: "/experiments",
   },
 ];
 
 const navigation = [
-  { name: "Dashboard", icon: Home },
-  { name: "Systems", icon: Layers3 },
-  { name: "Simulations", icon: Activity },
-  { name: "Experiments", icon: FlaskConical },
-  { name: "Clinical Cases", icon: Stethoscope },
-  { name: "Quiz", icon: Trophy },
+  { name: "Dashboard", icon: Home, href: "/" },
+  { name: "Systems", icon: Layers3, href: "/cardiovascular" },
+  { name: "Simulations", icon: Activity, href: "/cardiovascular" },
+  { name: "Experiments", icon: FlaskConical, href: "/experiments" },
+  { name: "Clinical Cases", icon: Stethoscope, href: "/experiments" },
+  { name: "Quiz", icon: Trophy, href: "/experiments" },
 ];
+
+
+function subscribeToProgress(callback: () => void) {
+  window.addEventListener("storage", callback);
+
+  window.addEventListener(
+    "physiolab-progress-updated",
+    callback,
+  );
+
+  return () => {
+    window.removeEventListener("storage", callback);
+
+    window.removeEventListener(
+      "physiolab-progress-updated",
+      callback,
+    );
+  };
+}
+
+function getCompletedExperimentsSnapshot() {
+  return getCompletedCount(getProgress());
+}
+
+function getServerCompletedExperimentsSnapshot() {
+  return 0;
+}
+
 
 export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const completedExperiments = useSyncExternalStore(
+  subscribeToProgress,
+  getCompletedExperimentsSnapshot,
+  getServerCompletedExperimentsSnapshot,
+);
+
+const experimentCompletionPercentage =
+  experiments.length > 0
+    ? Math.round(
+        (completedExperiments / experiments.length) * 100,
+      )
+    : 0;
 
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
@@ -96,21 +149,31 @@ export default function HomePage() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
+        {/* Branding */}
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
-          <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            onClick={() => setSidebarOpen(false)}
+            className="flex items-center gap-3"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-400/20">
               <Microscope size={22} strokeWidth={2.5} />
             </div>
 
             <div>
-              <h1 className="text-lg font-bold tracking-tight">Physiolab</h1>
+              <h1 className="text-lg font-bold tracking-tight">
+                Physiolab
+              </h1>
+
               <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
                 Human Physiology
               </p>
             </div>
-          </div>
+          </Link>
 
           <button
+            type="button"
+            aria-label="Close navigation"
             onClick={() => setSidebarOpen(false)}
             className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white lg:hidden"
           >
@@ -118,7 +181,8 @@ export default function HomePage() {
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-8">
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-4 py-8">
           <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
             Explore
           </p>
@@ -129,8 +193,11 @@ export default function HomePage() {
               const active = index === 0;
 
               return (
-                <button
+                <Link
                   key={item.name}
+                  href={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  aria-current={active ? "page" : undefined}
                   className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
                     active
                       ? "bg-cyan-400/10 text-cyan-300"
@@ -138,35 +205,45 @@ export default function HomePage() {
                   }`}
                 >
                   <Icon size={18} />
+
                   <span>{item.name}</span>
 
                   {active && (
                     <span className="ml-auto h-1.5 w-1.5 rounded-full bg-cyan-400" />
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>
 
+          {/* Workspace */}
           <p className="mb-3 mt-10 px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
             Workspace
           </p>
 
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white">
+          <button
+            type="button"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
+          >
             <Settings size={18} />
             <span>Settings</span>
           </button>
         </nav>
 
+        {/* Learning streak */}
         <div className="m-4 rounded-2xl border border-cyan-400/10 bg-cyan-400/5 p-4">
           <div className="mb-3 flex items-center gap-2">
             <Sparkles size={16} className="text-cyan-400" />
-            <span className="text-sm font-medium">Learning streak</span>
+
+            <span className="text-sm font-medium">
+              Learning streak
+            </span>
           </div>
 
           <div className="flex items-end justify-between">
             <div>
               <p className="text-2xl font-bold">7 days</p>
+
               <p className="mt-1 text-xs text-slate-500">
                 Keep exploring physiology.
               </p>
@@ -182,12 +259,15 @@ export default function HomePage() {
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-white/10 bg-[#07111f]/90 px-5 backdrop-blur-xl sm:px-8">
           <button
+            type="button"
+            aria-label="Open navigation"
             onClick={() => setSidebarOpen(true)}
             className="rounded-xl border border-white/10 p-2 text-slate-300 hover:bg-white/5 lg:hidden"
           >
             <Menu size={20} />
           </button>
 
+          {/* Search */}
           <div className="relative hidden max-w-md flex-1 lg:block">
             <Search
               size={18}
@@ -197,19 +277,30 @@ export default function HomePage() {
             <input
               type="text"
               placeholder="Search physiology..."
+              aria-label="Search physiology"
               className="h-11 w-full rounded-xl border border-white/10 bg-white/3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/40"
             />
           </div>
 
+          {/* User profile */}
           <div className="ml-auto flex items-center gap-3">
-            <button className="rounded-xl border border-white/10 p-2.5 text-slate-400 transition hover:bg-white/5 hover:text-white">
+            <button
+              type="button"
+              aria-label="Display settings"
+              className="rounded-xl border border-white/10 p-2.5 text-slate-400 transition hover:bg-white/5 hover:text-white"
+            >
               <Moon size={18} />
             </button>
 
             <div className="flex items-center gap-3 border-l border-white/10 pl-3">
               <div className="hidden text-right sm:block">
-                <p className="text-sm font-medium">Physio Explorer</p>
-                <p className="text-xs text-slate-500">Learner</p>
+                <p className="text-sm font-medium">
+                  Physio Explorer
+                </p>
+
+                <p className="text-xs text-slate-500">
+                  Learner
+                </p>
               </div>
 
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-cyan-300 to-blue-500 font-bold text-slate-950">
@@ -222,8 +313,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
           {/* Hero */}
           <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-[#0d2033] via-[#0a1828] to-[#07111f] p-7 sm:p-10">
-            <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
-            <div className="absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
+            <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
+
+            <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
 
             <div className="relative max-w-3xl">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-xs font-medium text-cyan-300">
@@ -233,7 +325,9 @@ export default function HomePage() {
 
               <h2 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
                 Understand the body by{" "}
-                <span className="text-cyan-300">exploring it.</span>
+                <span className="text-cyan-300">
+                  exploring it.
+                </span>
               </h2>
 
               <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
@@ -244,15 +338,21 @@ export default function HomePage() {
               </p>
 
               <div className="mt-7 flex flex-wrap gap-3">
-                <button className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
+                <Link
+                  href="/experiments"
+                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+                >
                   <Play size={16} fill="currentColor" />
                   Start exploring
-                </button>
+                </Link>
 
-                <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/7">
+                <Link
+                  href="/cardiovascular"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/7"
+                >
                   View simulations
                   <ArrowRight size={16} />
-                </button>
+                </Link>
               </div>
             </div>
           </section>
@@ -270,10 +370,13 @@ export default function HomePage() {
                 </h2>
               </div>
 
-              <button className="hidden items-center gap-1 text-sm text-slate-400 hover:text-white sm:flex">
+              <Link
+                href="/experiments"
+                className="hidden items-center gap-1 text-sm text-slate-400 hover:text-white sm:flex"
+              >
                 View progress
                 <ChevronRight size={16} />
-              </button>
+              </Link>
             </div>
 
             <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
@@ -281,7 +384,9 @@ export default function HomePage() {
               <div className="rounded-2xl border border-white/10 bg-white/2.5 p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-slate-500">Current module</p>
+                    <p className="text-sm text-slate-500">
+                      Current module
+                    </p>
 
                     <h3 className="mt-1 text-xl font-semibold">
                       Cardiovascular Physiology
@@ -296,13 +401,43 @@ export default function HomePage() {
                 <div className="mt-7">
                   <div className="mb-2 flex justify-between text-xs">
                     <span className="text-slate-500">Progress</span>
-                    <span className="font-medium text-cyan-300">82%</span>
+
+                    <span className="font-medium text-cyan-300">
+                      82%
+                    </span>
                   </div>
 
                   <div className="h-2 overflow-hidden rounded-full bg-slate-800">
                     <div className="h-full w-[82%] rounded-full bg-cyan-400" />
-                  </div>
-                </div>
+                  </div>                 
+                  <div className="mt-6">
+                    <div className="mb-2 flex justify-between text-xs">
+                  <span className="text-slate-500">
+                    Experiment completion
+                        </span>
+
+                      <span className="font-medium text-emerald-300">
+                      {experimentCompletionPercentage}%
+                      </span>
+                    </div>
+
+                    <div
+                    className="h-2 overflow-hidden rounded-full bg-slate-800"
+                    role="progressbar"
+                    aria-label="Experiment completion"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={experimentCompletionPercentage}
+                    >
+                    <div
+                    className="h-full rounded-full bg-linear-to-r from-emerald-400 to-teal-400 transition-all duration-500"
+                    style={{
+                    width: `${experimentCompletionPercentage}%`,
+                    }}
+                    />
+                    </div>
+                    </div>
+                    </div>
 
                 <div className="mt-7 flex flex-wrap items-center gap-6 text-sm">
                   <div>
@@ -311,8 +446,15 @@ export default function HomePage() {
                   </div>
 
                   <div>
-                    <p className="text-slate-500">Experiments</p>
-                    <p className="mt-1 font-semibold">8 completed</p>
+                  <p className="text-slate-500">Experiments</p>
+
+                  <p className="mt-1 font-semibold">
+                  {completedExperiments} / {experiments.length}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                  completed
+                  </p>
                   </div>
 
                   <div>
@@ -321,10 +463,13 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <button className="mt-7 inline-flex items-center gap-2 text-sm font-medium text-cyan-300 hover:text-cyan-200">
+                <Link
+                  href="/cardiovascular"
+                  className="mt-7 inline-flex items-center gap-2 text-sm font-medium text-cyan-300 hover:text-cyan-200"
+                >
                   Continue module
                   <ArrowRight size={16} />
-                </button>
+                </Link>
               </div>
 
               {/* Daily challenge */}
@@ -348,10 +493,13 @@ export default function HomePage() {
                   What happens to heart rate?
                 </p>
 
-                <button className="mt-6 inline-flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/10 px-4 py-2.5 text-sm font-medium text-violet-200 hover:bg-violet-400/15">
+                <Link
+                  href="/baroreflex"
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/10 px-4 py-2.5 text-sm font-medium text-violet-200 transition hover:bg-violet-400/15"
+                >
                   Take challenge
                   <ArrowRight size={15} />
-                </button>
+                </Link>
               </div>
             </div>
           </section>
@@ -369,10 +517,13 @@ export default function HomePage() {
                 </h2>
               </div>
 
-              <button className="hidden items-center gap-1 text-sm text-slate-400 hover:text-white sm:flex">
+              <Link
+                href="/experiments"
+                className="hidden items-center gap-1 text-sm text-slate-400 hover:text-white sm:flex"
+              >
                 View all
                 <ChevronRight size={16} />
-              </button>
+              </Link>
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -390,7 +541,9 @@ export default function HomePage() {
                       <Icon size={21} />
                     </div>
 
-                    <h3 className="mt-5 font-semibold">{system.name}</h3>
+                    <h3 className="mt-5 font-semibold">
+                      {system.name}
+                    </h3>
 
                     <p className="mt-2 min-h-18 text-sm leading-6 text-slate-500">
                       {system.description}
@@ -399,6 +552,7 @@ export default function HomePage() {
                     <div className="mt-5">
                       <div className="mb-2 flex justify-between text-xs">
                         <span className="text-slate-600">Mastery</span>
+
                         <span className="text-slate-400">
                           {system.progress}%
                         </span>
@@ -415,13 +569,17 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    <button className="mt-5 flex items-center gap-1 text-sm font-medium text-slate-300 transition group-hover:text-cyan-300">
+                    <Link
+                      href={system.href}
+                      className="mt-5 flex items-center gap-1 text-sm font-medium text-slate-300 transition group-hover:text-cyan-300"
+                    >
                       Explore
+
                       <ArrowRight
                         size={15}
                         className="transition-transform group-hover:translate-x-1"
                       />
-                    </button>
+                    </Link>
                   </article>
                 );
               })}
@@ -511,25 +669,6 @@ export default function HomePage() {
                   <ArrowRight size={15} />
                 </span>
               </Link>
-
-              {/* Reflex Lab */}
-              <button className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-violet-400/20 hover:bg-violet-400/3">
-                <Brain size={25} className="text-violet-400" />
-
-                <h3 className="mt-5 font-semibold">
-                  Reflex Lab
-                </h3>
-
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Follow a sensory stimulus through the nervous system and
-                  observe the resulting response.
-                </p>
-
-                <span className="mt-5 inline-flex items-center gap-1 text-sm text-slate-300 group-hover:text-violet-300">
-                  Run experiment
-                  <ArrowRight size={15} />
-                </span>
-              </button>
             </div>
           </section>
 

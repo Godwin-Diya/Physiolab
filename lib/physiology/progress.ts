@@ -24,6 +24,7 @@ export function getProgress(): ExperimentProgress {
   }
 }
 
+
 export function saveProgress(
   progress: ExperimentProgress,
 ): void {
@@ -36,10 +37,18 @@ export function saveProgress(
       STORAGE_KEY,
       JSON.stringify(progress),
     );
+
+    window.dispatchEvent(
+      new Event("physiolab-progress-updated"),
+    );
   } catch (error) {
-    console.error("Unable to save Physiolab progress:", error);
+    console.error(
+      "Unable to save Physiolab progress:",
+      error,
+    );
   }
 }
+
 
 export function updateExperimentStatus(
   experimentId: string,
