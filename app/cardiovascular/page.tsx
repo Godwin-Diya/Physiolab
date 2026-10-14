@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { useMemo, useState } from "react";
+
 import {
   Activity,
   ArrowLeft,
@@ -9,8 +12,7 @@ import {
   Sparkles,
   TrendingUp,
 } from "lucide-react";
-import Link from "next/link";
-import { useMemo, useState } from "react";
+
 import {
   CartesianGrid,
   Line,
@@ -21,15 +23,7 @@ import {
   YAxis,
 } from "recharts";
 
-import { MetricCard } from "@/components/physiology/MetricCard";
-
-import { SimulationPanel } from "@/components/physiology/SimulationPanel";
-
-import { SliderControl } from "@/components/physiology/SliderControl";import { calculateBaroreflex } from "@/lib/physiology/baroreflex";
-
 import { ExperimentChallenge } from "@/components/physiology/ExperimentChallenge";
-
-
 
 export default function CardiovascularPage() {
   const [heartRate, setHeartRate] = useState(70);
@@ -168,8 +162,8 @@ export default function CardiovascularPage() {
 
         {/* Main Lab */}
         <section className="grid gap-6 lg:grid-cols-[1.45fr_1fr]">
-          {/* Controls */}
-          <div className="rounded-3xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+          {/* Experiment Controls */}
+          <div className="rounded-3xl border border-white/10 bg-white/2.5 p-6 sm:p-8">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
@@ -182,6 +176,7 @@ export default function CardiovascularPage() {
               </div>
 
               <button
+                type="button"
                 onClick={resetExperiment}
                 className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-400 transition hover:bg-white/5 hover:text-white"
               >
@@ -206,9 +201,7 @@ export default function CardiovascularPage() {
                 <div className="text-right">
                   <span className="text-3xl font-bold">{heartRate}</span>
 
-                  <span className="ml-1 text-sm text-slate-500">
-                    bpm
-                  </span>
+                  <span className="ml-1 text-sm text-slate-500">bpm</span>
                 </div>
               </div>
 
@@ -220,6 +213,7 @@ export default function CardiovascularPage() {
                 onChange={(event) =>
                   setHeartRate(Number(event.target.value))
                 }
+                aria-label="Heart rate in beats per minute"
                 className="mt-6 w-full accent-cyan-400"
               />
 
@@ -243,13 +237,9 @@ export default function CardiovascularPage() {
                 </div>
 
                 <div className="text-right">
-                  <span className="text-3xl font-bold">
-                    {strokeVolume}
-                  </span>
+                  <span className="text-3xl font-bold">{strokeVolume}</span>
 
-                  <span className="ml-1 text-sm text-slate-500">
-                    mL
-                  </span>
+                  <span className="ml-1 text-sm text-slate-500">mL</span>
                 </div>
               </div>
 
@@ -261,6 +251,7 @@ export default function CardiovascularPage() {
                 onChange={(event) =>
                   setStrokeVolume(Number(event.target.value))
                 }
+                aria-label="Stroke volume in milliliters"
                 className="mt-6 w-full accent-cyan-400"
               />
 
@@ -271,7 +262,7 @@ export default function CardiovascularPage() {
             </div>
 
             {/* Formula */}
-            <div className="mt-10 rounded-2xl border border-cyan-400/10 bg-cyan-400/[0.03] p-5">
+            <div className="mt-10 rounded-2xl border border-cyan-400/10 bg-cyan-400/3 p-5">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
                 <Activity size={14} />
                 Physiological relationship
@@ -279,33 +270,23 @@ export default function CardiovascularPage() {
 
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-center">
                 <div className="rounded-xl bg-white/5 px-4 py-3">
-                  <p className="text-xs text-slate-500">
-                    Heart Rate
-                  </p>
+                  <p className="text-xs text-slate-500">Heart Rate</p>
 
-                  <p className="mt-1 font-semibold">
-                    {heartRate} bpm
-                  </p>
+                  <p className="mt-1 font-semibold">{heartRate} bpm</p>
                 </div>
 
                 <span className="text-xl text-slate-600">×</span>
 
                 <div className="rounded-xl bg-white/5 px-4 py-3">
-                  <p className="text-xs text-slate-500">
-                    Stroke Volume
-                  </p>
+                  <p className="text-xs text-slate-500">Stroke Volume</p>
 
-                  <p className="mt-1 font-semibold">
-                    {strokeVolume} mL
-                  </p>
+                  <p className="mt-1 font-semibold">{strokeVolume} mL</p>
                 </div>
 
                 <span className="text-xl text-slate-600">=</span>
 
                 <div className="rounded-xl bg-cyan-400/10 px-4 py-3">
-                  <p className="text-xs text-cyan-400">
-                    Cardiac Output
-                  </p>
+                  <p className="text-xs text-cyan-400">Cardiac Output</p>
 
                   <p className="mt-1 font-semibold text-cyan-300">
                     {cardiacOutput.toFixed(2)} L/min
@@ -316,7 +297,7 @@ export default function CardiovascularPage() {
           </div>
 
           {/* Live Visualization */}
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-[#0c1e30] to-[#091525] p-6 sm:p-8">
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-b from-[#0c1e30] to-[#091525] p-6 sm:p-8">
             <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-rose-500/10 blur-3xl" />
 
             <div className="relative">
@@ -329,7 +310,7 @@ export default function CardiovascularPage() {
               </h2>
 
               {/* Animated Heart */}
-              <div className="flex min-h-[280px] items-center justify-center">
+              <div className="flex min-h-70 items-center justify-center">
                 <div
                   className="flex h-40 w-40 items-center justify-center rounded-full bg-rose-500/10 shadow-[0_0_80px_rgba(244,63,94,0.12)]"
                   style={{
@@ -344,7 +325,7 @@ export default function CardiovascularPage() {
                 </div>
               </div>
 
-              {/* Output */}
+              {/* Cardiac Output */}
               <div className="text-center">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
                   Cardiac Output
@@ -354,23 +335,15 @@ export default function CardiovascularPage() {
                   {cardiacOutput.toFixed(2)}
                 </p>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  liters / minute
-                </p>
+                <p className="mt-1 text-sm text-slate-500">liters / minute</p>
               </div>
 
               {/* Status */}
-              <div
-                className={`mt-8 rounded-2xl p-4 ${status.background}`}
-              >
+              <div className={`mt-8 rounded-2xl p-4 ${status.background}`}>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`h-2 w-2 rounded-full ${status.dot}`}
-                  />
+                  <span className={`h-2 w-2 rounded-full ${status.dot}`} />
 
-                  <p
-                    className={`text-sm font-medium ${status.className}`}
-                  >
+                  <p className={`text-sm font-medium ${status.className}`}>
                     {status.label}
                   </p>
                 </div>
@@ -383,8 +356,8 @@ export default function CardiovascularPage() {
           </div>
         </section>
 
-        {/* Chart */}
-        <section className="mt-6 rounded-3xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+        {/* Cardiac Output Chart */}
+        <section className="mt-6 rounded-3xl border border-white/10 bg-white/2.5 p-6 sm:p-8">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
               <TrendingUp size={20} />
@@ -401,7 +374,7 @@ export default function CardiovascularPage() {
             </div>
           </div>
 
-          <div className="mt-8 h-[280px] w-full">
+          <div className="mt-8 h-70 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <CartesianGrid
@@ -449,8 +422,8 @@ export default function CardiovascularPage() {
           </div>
         </section>
 
-        {/* AI-style insight */}
-        <section className="mt-6 rounded-3xl border border-cyan-400/10 bg-cyan-400/[0.025] p-6 sm:p-8">
+        {/* Physiology Insight */}
+        <section className="mt-6 rounded-3xl border border-cyan-400/10 bg-cyan-400/2.5 p-6 sm:p-8">
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
               <Sparkles size={20} />
@@ -472,8 +445,8 @@ export default function CardiovascularPage() {
           </div>
         </section>
 
-        {/* Explanation */}
-        <section className="mt-6 rounded-3xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+        {/* Physiological Explanation */}
+        <section className="mt-6 rounded-3xl border border-white/10 bg-white/2.5 p-6 sm:p-8">
           <div className="flex items-start gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
               <Info size={20} />
@@ -496,9 +469,7 @@ export default function CardiovascularPage() {
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-white/10 bg-black/10 p-5">
-                  <p className="font-semibold text-slate-200">
-                    Heart Rate
-                  </p>
+                  <p className="font-semibold text-slate-200">Heart Rate</p>
 
                   <p className="mt-2 text-sm leading-6 text-slate-500">
                     The number of heartbeats occurring each minute.
@@ -523,30 +494,34 @@ export default function CardiovascularPage() {
           </div>
         </section>
 
-        <ExperimentChallenge
-        question="If heart rate increases while stroke volume stays constant, what should happen to cardiac output?"
-        description="Use the cardiac output relationship to make your prediction before changing the simulation."
-        options={[
-        {
-        label: "Cardiac output decreases",
-        value: "decrease",
-        },
-        {
-        label: "Cardiac output increases",
-        value: "increase",
-        },
-        {
-        label: "Cardiac output stays approximately the same",
-        value: "same",
-        },
-        ]}
-        correctAnswer="increase"
-        explanation="Cardiac output equals heart rate multiplied by stroke volume. When stroke volume stays constant, increasing heart rate increases the amount of blood pumped by the heart each minute."
-        observation="Increase the heart rate slider while keeping stroke volume unchanged. Watch the cardiac output value and chart respond."
-        />
+        {/* Experiment Challenge */}
+        <div className="mt-6">
+          <ExperimentChallenge
+            experimentId="cardiac-output"
+            question="If heart rate increases while stroke volume stays constant, what should happen to cardiac output?"
+            description="Use the cardiac output relationship to make your prediction before changing the simulation."
+            options={[
+              {
+                label: "Cardiac output decreases",
+                value: "decrease",
+              },
+              {
+                label: "Cardiac output increases",
+                value: "increase",
+              },
+              {
+                label: "Cardiac output stays approximately the same",
+                value: "same",
+              },
+            ]}
+            correctAnswer="increase"
+            explanation="Cardiac output equals heart rate multiplied by stroke volume. When stroke volume stays constant, increasing heart rate increases the amount of blood pumped by the heart each minute."
+            observation="Increase the heart rate slider while keeping stroke volume unchanged. Watch the cardiac output value and chart respond."
+          />
+        </div>
 
-        {/* Equation */}
-        <section className="mt-6 rounded-3xl border border-white/10 bg-gradient-to-r from-cyan-400/[0.05] to-blue-500/[0.05] p-8 text-center">
+        {/* Core Equation */}
+        <section className="mt-6 rounded-3xl border border-white/10 bg-linear-to-r from-cyan-400/5 to-blue-500/5 p-8 text-center">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
             Core equation
           </p>
@@ -555,13 +530,11 @@ export default function CardiovascularPage() {
             Cardiac Output = Heart Rate × Stroke Volume
           </p>
 
-          <p className="mt-3 text-sm text-slate-500">
-            CO = HR × SV
-          </p>
+          <p className="mt-3 text-sm text-slate-500">CO = HR × SV</p>
         </section>
       </div>
 
-      {/* Heartbeat animation */}
+      {/* Heartbeat Animation */}
       <style jsx global>{`
         @keyframes heartbeat {
           0%,
