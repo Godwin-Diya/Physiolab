@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -13,13 +14,11 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { MetricCard } from "@/components/physiology/MetricCard";
-
-import { SimulationPanel } from "@/components/physiology/SimulationPanel";
-
-import { SliderControl } from "@/components/physiology/SliderControl";import { calculateBaroreflex } from "@/lib/physiology/baroreflex";
-
 import { ExperimentChallenge } from "@/components/physiology/ExperimentChallenge";
+import { MetricCard } from "@/components/physiology/MetricCard";
+import { SimulationPanel } from "@/components/physiology/SimulationPanel";
+import { SliderControl } from "@/components/physiology/SliderControl";
+import { calculateBaroreflex } from "@/lib/physiology/baroreflex";
 
 export default function BaroreflexPage() {
   const [arterialPressure, setArterialPressure] = useState(100);
@@ -27,7 +26,7 @@ export default function BaroreflexPage() {
 
   const result = calculateBaroreflex(
     arterialPressure,
-    bloodVolume
+    bloodVolume,
   );
 
   const resetExperiment = () => {
@@ -38,9 +37,7 @@ export default function BaroreflexPage() {
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
-
         {/* Header */}
-
         <header className="mb-8">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-xs font-medium text-cyan-300">
             <Sparkles size={14} />
@@ -54,14 +51,15 @@ export default function BaroreflexPage() {
               </h1>
 
               <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-                Explore how the autonomic nervous system responds to changes
-                in arterial pressure and blood volume.
+                Explore how the autonomic nervous system responds
+                to changes in arterial pressure and blood volume.
               </p>
             </div>
 
             <button
+              type="button"
               onClick={resetExperiment}
-              className="inline-flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.07] hover:text-white"
+              className="inline-flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
             >
               <RotateCcw size={16} />
               Reset experiment
@@ -70,11 +68,8 @@ export default function BaroreflexPage() {
         </header>
 
         {/* Main simulation */}
-
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-
           {/* Controls */}
-
           <SimulationPanel
             eyebrow="Experiment controls"
             title="Change the physiological conditions"
@@ -102,7 +97,6 @@ export default function BaroreflexPage() {
             </div>
 
             {/* Experimental question */}
-
             <div className="mt-8 rounded-2xl border border-violet-400/10 bg-violet-400/4 p-5">
               <div className="flex items-center gap-2 text-violet-300">
                 <Activity size={17} />
@@ -113,14 +107,13 @@ export default function BaroreflexPage() {
               </div>
 
               <p className="mt-3 text-sm leading-6 text-slate-400">
-                What do you predict will happen to heart rate if arterial
-                pressure suddenly falls?
+                What do you predict will happen to heart rate if
+                arterial pressure suddenly falls?
               </p>
             </div>
           </SimulationPanel>
 
-          {/* Response */}
-
+          {/* Live response */}
           <SimulationPanel
             eyebrow="Live response"
             title="Autonomic regulation"
@@ -152,8 +145,7 @@ export default function BaroreflexPage() {
               />
             </div>
 
-            {/* Activity meter */}
-
+            {/* Baroreceptor activity meter */}
             <div className="mt-7">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm text-slate-400">
@@ -178,16 +170,13 @@ export default function BaroreflexPage() {
         </div>
 
         {/* Autonomic balance */}
-
         <section className="mt-6">
           <SimulationPanel
             eyebrow="Autonomic nervous system"
             title="The body adjusts in opposite directions"
           >
             <div className="grid gap-5 md:grid-cols-2">
-
               {/* Parasympathetic */}
-
               <div className="rounded-2xl border border-cyan-400/10 bg-cyan-400/4 p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -222,7 +211,6 @@ export default function BaroreflexPage() {
               </div>
 
               {/* Sympathetic */}
-
               <div className="rounded-2xl border border-rose-400/10 bg-rose-400/4 p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -259,17 +247,14 @@ export default function BaroreflexPage() {
           </SimulationPanel>
         </section>
 
-        {/* Feedback loop */}
-
+        {/* Physiological feedback loop */}
         <section className="mt-6">
           <SimulationPanel
             eyebrow="Physiological feedback loop"
             title="Follow the signal"
           >
             <div className="grid gap-4 md:grid-cols-7">
-
               {/* Arterial pressure */}
-
               <div
                 className={`rounded-2xl border p-5 text-center transition-all duration-300 ${
                   result.pressureDirection === "low"
@@ -317,7 +302,6 @@ export default function BaroreflexPage() {
               </div>
 
               {/* Arrow */}
-
               <div className="hidden items-center justify-center md:flex">
                 <ArrowRight
                   className={`transition-all duration-300 ${
@@ -331,7 +315,6 @@ export default function BaroreflexPage() {
               </div>
 
               {/* Baroreceptors */}
-
               <div
                 className={`rounded-2xl border p-5 text-center transition-all duration-300 ${
                   result.baroreceptorActivity < 45
@@ -365,7 +348,6 @@ export default function BaroreflexPage() {
               </div>
 
               {/* Arrow */}
-
               <div className="hidden items-center justify-center md:flex">
                 <ArrowRight
                   className={`transition-all duration-300 ${
@@ -379,7 +361,6 @@ export default function BaroreflexPage() {
               </div>
 
               {/* Autonomic response */}
-
               <div
                 className={`rounded-2xl border p-5 text-center transition-all duration-300 ${
                   result.autonomicDirection === "sympathetic"
@@ -416,7 +397,6 @@ export default function BaroreflexPage() {
             </div>
 
             {/* Direction indicator */}
-
             <div className="mt-5 rounded-2xl border border-white/10 bg-white/2.5 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -458,7 +438,6 @@ export default function BaroreflexPage() {
         </section>
 
         {/* Response explanation */}
-
         <section className="mt-6 grid gap-6 lg:grid-cols-2">
           <SimulationPanel
             eyebrow="What is happening?"
@@ -474,39 +453,42 @@ export default function BaroreflexPage() {
             title="Negative feedback"
           >
             <p className="text-sm leading-7 text-slate-400">
-              The baroreceptor reflex is a classic example of negative
-              feedback. A change in arterial pressure is detected and
-              triggers a response that acts to oppose the original change,
-              helping maintain cardiovascular stability.
+              The baroreceptor reflex is a classic example of
+              negative feedback. A change in arterial pressure is
+              detected and triggers a response that acts to oppose
+              the original change, helping maintain cardiovascular
+              stability.
             </p>
           </SimulationPanel>
         </section>
-        
-        <ExperimentChallenge
-        question="Arterial pressure suddenly falls. What should happen to sympathetic activity?"
-        description="Think about the baroreceptor reflex before checking the simulation response."
-        options={[
-        {
-        label: "Decrease",
-        value: "decrease",
-        },
-        {
-        label: "Increase",
-        value: "increase",
-        },
-        {
-        label: "Stay approximately the same",
-        value: "same",
-        },
-        ]}
-        correctAnswer="increase"
-        explanation="A fall in arterial pressure reduces baroreceptor firing. This decreases parasympathetic influence and increases sympathetic activity, helping restore arterial pressure."
-        observation="Lower the arterial pressure slider and watch how the autonomic balance shifts toward sympathetic activity."
-        />
 
+        {/* Experiment challenge */}
+        <section className="mt-6">
+          <ExperimentChallenge
+            experimentId="baroreceptor-reflex"
+            question="Arterial pressure suddenly falls. What should happen to sympathetic activity?"
+            description="Think about the baroreceptor reflex before checking the simulation response."
+            options={[
+              {
+                label: "Decrease",
+                value: "decrease",
+              },
+              {
+                label: "Increase",
+                value: "increase",
+              },
+              {
+                label: "Stay approximately the same",
+                value: "same",
+              },
+            ]}
+            correctAnswer="increase"
+            explanation="A fall in arterial pressure reduces baroreceptor firing. This decreases parasympathetic influence and increases sympathetic activity, helping restore arterial pressure."
+            observation="Lower the arterial pressure slider and watch how the autonomic balance shifts toward sympathetic activity."
+          />
+        </section>
 
         {/* Footer */}
-
         <footer className="mt-12 border-t border-white/10 py-8 text-center">
           <p className="text-xs text-slate-600">
             Physiolab · Interactive Human Physiology Learning Platform
