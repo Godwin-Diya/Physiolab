@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -11,15 +12,16 @@ import {
   Wind,
 } from "lucide-react";
 
+import { ExperimentChallenge } from "@/components/physiology/ExperimentChallenge";
 import { MetricCard } from "@/components/physiology/MetricCard";
 import { SimulationPanel } from "@/components/physiology/SimulationPanel";
 import { SliderControl } from "@/components/physiology/SliderControl";
 import { calculateGasExchange } from "@/lib/physiology/respiratory";
-import { ExperimentChallenge } from "@/components/physiology/ExperimentChallenge";
 
 export default function RespiratoryPage() {
   const [alveolarOxygen, setAlveolarOxygen] = useState(100);
-  const [alveolarCarbonDioxide, setAlveolarCarbonDioxide] = useState(40);
+  const [alveolarCarbonDioxide, setAlveolarCarbonDioxide] =
+    useState(40);
   const [inspiredOxygen, setInspiredOxygen] = useState(150);
   const [ventilation, setVentilation] = useState(6);
 
@@ -27,7 +29,7 @@ export default function RespiratoryPage() {
     alveolarOxygen,
     alveolarCarbonDioxide,
     inspiredOxygen,
-    ventilation
+    ventilation,
   );
 
   return (
@@ -52,13 +54,13 @@ export default function RespiratoryPage() {
           </div>
 
           <p className="max-w-3xl text-sm leading-7 text-slate-400">
-            Explore how oxygen and carbon dioxide move between the alveoli and
-            the blood. Adjust the variables and observe how the gas exchange
-            process responds.
+            Explore how oxygen and carbon dioxide move between the
+            alveoli and the blood. Adjust the variables and observe
+            how the gas exchange process responds.
           </p>
         </section>
 
-        {/* Controls */}
+        {/* Experiment controls */}
         <SimulationPanel
           title="Experiment Controls"
           eyebrow="Manipulate the respiratory system"
@@ -106,7 +108,7 @@ export default function RespiratoryPage() {
           </div>
         </SimulationPanel>
 
-        {/* Metrics */}
+        {/* Gas exchange metrics */}
         <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="O₂ Gradient"
@@ -184,14 +186,16 @@ export default function RespiratoryPage() {
                 </div>
               </div>
 
-              {/* Direction */}
+              {/* Diffusion direction */}
               <div className="flex flex-col items-center gap-3">
                 <div className="flex items-center gap-2 text-cyan-300">
                   <ArrowRight className="hidden h-6 w-6 lg:block" />
                   <ArrowDown className="h-6 w-6 lg:hidden" />
+
                   <span className="text-xs font-semibold uppercase tracking-[0.16em]">
                     Diffusion
                   </span>
+
                   <ArrowRight className="hidden h-6 w-6 lg:block" />
                 </div>
 
@@ -200,7 +204,7 @@ export default function RespiratoryPage() {
                 </div>
               </div>
 
-              {/* Blood */}
+              {/* Pulmonary capillary */}
               <div className="rounded-3xl border border-rose-400/20 bg-rose-400/5 p-6">
                 <div className="mb-5 flex items-center justify-between">
                   <div>
@@ -246,7 +250,7 @@ export default function RespiratoryPage() {
           </SimulationPanel>
         </section>
 
-        {/* Ventilation status */}
+        {/* Ventilation and gas exchange status */}
         <section className="mt-8 grid gap-6 lg:grid-cols-2">
           <SimulationPanel
             title="Ventilation Status"
@@ -311,17 +315,18 @@ export default function RespiratoryPage() {
           </SimulationPanel>
         </section>
 
-        {/* Learning explanation */}
+        {/* Learning explanations */}
         <section className="mt-8 grid gap-6 lg:grid-cols-2">
           <SimulationPanel
             title="Why Oxygen Moves Into Blood"
             eyebrow="Diffusion"
           >
             <p className="text-sm leading-7 text-slate-400">
-              Oxygen moves from the alveolar air space toward the pulmonary
-              capillary blood because it moves down its partial-pressure
-              gradient. The larger the difference between alveolar and blood
-              oxygen pressure, the greater the driving force for diffusion.
+              Oxygen moves from the alveolar air space toward the
+              pulmonary capillary blood because it moves down its
+              partial-pressure gradient. The larger the difference
+              between alveolar and blood oxygen pressure, the greater
+              the driving force for diffusion.
             </p>
           </SimulationPanel>
 
@@ -330,35 +335,39 @@ export default function RespiratoryPage() {
             eyebrow="CO₂ removal"
           >
             <p className="text-sm leading-7 text-slate-400">
-              Carbon dioxide produced by metabolism is transported in the blood
-              to the lungs. It diffuses from the blood into the alveoli and is
-              then removed from the body during expiration.
+              Carbon dioxide produced by metabolism is transported
+              in the blood to the lungs. It diffuses from the blood
+              into the alveoli and is then removed from the body
+              during expiration.
             </p>
           </SimulationPanel>
         </section>
 
-<ExperimentChallenge
-  question="If alveolar ventilation increases, what generally happens to carbon dioxide removal?"
-  description="Think about how ventilation moves fresh air into the alveoli before checking your prediction."
-  options={[
-    {
-      label: "Carbon dioxide removal decreases",
-      value: "decrease",
-    },
-    {
-      label: "Carbon dioxide removal increases",
-      value: "increase",
-    },
-    {
-      label: "Carbon dioxide removal stays approximately the same",
-      value: "same",
-    },
-  ]}
-  correctAnswer="increase"
-  explanation="Increasing ventilation brings more fresh gas into the alveoli. In this simplified model, this supports greater carbon dioxide removal from the alveolar space."
-  observation="Increase the ventilation slider and observe how the gas-exchange indicators respond."
-/>
-
+        {/* Experiment challenge */}
+        <section className="mt-8">
+          <ExperimentChallenge
+            experimentId="gas-exchange"
+            question="If alveolar ventilation increases, what generally happens to carbon dioxide removal?"
+            description="Think about how ventilation moves fresh air into the alveoli before checking your prediction."
+            options={[
+              {
+                label: "Carbon dioxide removal decreases",
+                value: "decrease",
+              },
+              {
+                label: "Carbon dioxide removal increases",
+                value: "increase",
+              },
+              {
+                label: "Carbon dioxide removal stays approximately the same",
+                value: "same",
+              },
+            ]}
+            correctAnswer="increase"
+            explanation="Increasing ventilation brings more fresh gas into the alveoli. In this simplified model, this supports greater carbon dioxide removal from the alveolar space."
+            observation="Increase the ventilation slider and observe how the gas-exchange indicators respond."
+          />
+        </section>
 
         {/* Footer */}
         <footer className="mt-12 border-t border-white/10 pt-6">
@@ -370,4 +379,3 @@ export default function RespiratoryPage() {
     </main>
   );
 }
-
