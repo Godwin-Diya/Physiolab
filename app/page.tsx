@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -88,10 +89,13 @@ const navigation = [
   { name: "Quiz", icon: Trophy, href: "/experiments" },
 ];
 
-
+// Subscribe to progress changes in this tab and in other tabs.
 function subscribeToProgress(callback: () => void) {
-  window.addEventListener("storage", callback);
+  if (typeof window === "undefined") {
+    return () => {};
+  }
 
+  window.addEventListener("storage", callback);
   window.addEventListener(
     "physiolab-progress-updated",
     callback,
@@ -99,7 +103,6 @@ function subscribeToProgress(callback: () => void) {
 
   return () => {
     window.removeEventListener("storage", callback);
-
     window.removeEventListener(
       "physiolab-progress-updated",
       callback,
@@ -107,37 +110,41 @@ function subscribeToProgress(callback: () => void) {
   };
 }
 
+// Read the number of completed experiments from saved progress.
 function getCompletedExperimentsSnapshot() {
   return getCompletedCount(getProgress());
 }
 
+// Use the same initial snapshot during server rendering.
 function getServerCompletedExperimentsSnapshot() {
   return 0;
 }
-
 
 export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const completedExperiments = useSyncExternalStore(
-  subscribeToProgress,
-  getCompletedExperimentsSnapshot,
-  getServerCompletedExperimentsSnapshot,
-);
+    subscribeToProgress,
+    getCompletedExperimentsSnapshot,
+    getServerCompletedExperimentsSnapshot,
+  );
 
-const experimentCompletionPercentage =
-  experiments.length > 0
-    ? Math.round(
-        (completedExperiments / experiments.length) * 100,
-      )
-    : 0;
+  const totalExperiments = experiments.length;
+
+  const experimentCompletionPercentage =
+    totalExperiments > 0
+      ? Math.round(
+          (completedExperiments / totalExperiments) * 100,
+        )
+      : 0;
 
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <button
-          aria-label="Close navigation"
+          type="button"
+          aria-label="Close navigation overlay"
           onClick={() => setSidebarOpen(false)}
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
         />
@@ -249,7 +256,9 @@ const experimentCompletionPercentage =
               </p>
             </div>
 
-            <div className="text-2xl">🔥</div>
+            <div className="text-2xl" aria-hidden="true">
+              🔥
+            </div>
           </div>
         </div>
       </aside>
@@ -331,10 +340,10 @@ const experimentCompletionPercentage =
               </h2>
 
               <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-                Learn physiology through interactive simulations, virtual
-                experiments, visual feedback loops and clinical reasoning.
-                Move beyond memorization and discover why the body responds
-                the way it does.
+                Learn physiology through interactive simulations,
+                virtual experiments, visual feedback loops and
+                clinical reasoning. Move beyond memorization and
+                discover why the body responds the way it does.
               </p>
 
               <div className="mt-7 flex flex-wrap gap-3">
@@ -398,9 +407,13 @@ const experimentCompletionPercentage =
                   </div>
                 </div>
 
+                {/* Progress bars */}
                 <div className="mt-7">
+                  {/* Cardiovascular module progress */}
                   <div className="mb-2 flex justify-between text-xs">
-                    <span className="text-slate-500">Progress</span>
+                    <span className="text-slate-500">
+                      Progress
+                    </span>
 
                     <span className="font-medium text-cyan-300">
                       82%
@@ -409,36 +422,39 @@ const experimentCompletionPercentage =
 
                   <div className="h-2 overflow-hidden rounded-full bg-slate-800">
                     <div className="h-full w-[82%] rounded-full bg-cyan-400" />
-                  </div>                 
+                  </div>
+
+                  {/* Overall experiment completion */}
                   <div className="mt-6">
                     <div className="mb-2 flex justify-between text-xs">
-                  <span className="text-slate-500">
-                    Experiment completion
-                        </span>
+                      <span className="text-slate-500">
+                        Experiment completion
+                      </span>
 
                       <span className="font-medium text-emerald-300">
-                      {experimentCompletionPercentage}%
+                        {experimentCompletionPercentage}%
                       </span>
                     </div>
 
                     <div
-                    className="h-2 overflow-hidden rounded-full bg-slate-800"
-                    role="progressbar"
-                    aria-label="Experiment completion"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={experimentCompletionPercentage}
+                      className="h-2 overflow-hidden rounded-full bg-slate-800"
+                      role="progressbar"
+                      aria-label="Experiment completion"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={experimentCompletionPercentage}
                     >
-                    <div
-                    className="h-full rounded-full bg-linear-to-r from-emerald-400 to-teal-400 transition-all duration-500"
-                    style={{
-                    width: `${experimentCompletionPercentage}%`,
-                    }}
-                    />
+                      <div
+                        className="h-full rounded-full bg-linear-to-r from-emerald-400 to-teal-400 transition-all duration-500"
+                        style={{
+                          width: `${experimentCompletionPercentage}%`,
+                        }}
+                      />
                     </div>
-                    </div>
-                    </div>
+                  </div>
+                </div>
 
+                {/* Learning statistics */}
                 <div className="mt-7 flex flex-wrap items-center gap-6 text-sm">
                   <div>
                     <p className="text-slate-500">Lessons</p>
@@ -446,15 +462,15 @@ const experimentCompletionPercentage =
                   </div>
 
                   <div>
-                  <p className="text-slate-500">Experiments</p>
+                    <p className="text-slate-500">Experiments</p>
 
-                  <p className="mt-1 font-semibold">
-                  {completedExperiments} / {experiments.length}
-                  </p>
+                    <p className="mt-1 font-semibold">
+                      {completedExperiments} / {totalExperiments}
+                    </p>
 
-                  <p className="mt-1 text-xs text-slate-500">
-                  completed
-                  </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      completed
+                    </p>
                   </div>
 
                   <div>
@@ -489,8 +505,8 @@ const experimentCompletionPercentage =
                 </h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  A patient experiences a sudden decrease in blood pressure.
-                  What happens to heart rate?
+                  A patient experiences a sudden decrease in blood
+                  pressure. What happens to heart rate?
                 </p>
 
                 <Link
@@ -551,7 +567,9 @@ const experimentCompletionPercentage =
 
                     <div className="mt-5">
                       <div className="mb-2 flex justify-between text-xs">
-                        <span className="text-slate-600">Mastery</span>
+                        <span className="text-slate-600">
+                          Mastery
+                        </span>
 
                         <span className="text-slate-400">
                           {system.progress}%
@@ -562,9 +580,11 @@ const experimentCompletionPercentage =
                         <div
                           className={`h-full rounded-full ${system.color.replace(
                             "text-",
-                            "bg-"
+                            "bg-",
                           )}`}
-                          style={{ width: `${system.progress}%` }}
+                          style={{
+                            width: `${system.progress}%`,
+                          }}
                         />
                       </div>
                     </div>
@@ -604,15 +624,18 @@ const experimentCompletionPercentage =
                 href="/cardiovascular"
                 className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-rose-400/20 hover:bg-rose-400/3"
               >
-                <HeartPulse size={25} className="text-rose-400" />
+                <HeartPulse
+                  size={25}
+                  className="text-rose-400"
+                />
 
                 <h3 className="mt-5 font-semibold">
                   Cardiac Output Lab
                 </h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Change heart rate and stroke volume and observe how cardiac
-                  output responds.
+                  Change heart rate and stroke volume and observe
+                  how cardiac output responds.
                 </p>
 
                 <span className="mt-5 inline-flex items-center gap-1 text-sm text-slate-300 group-hover:text-rose-300">
@@ -639,8 +662,8 @@ const experimentCompletionPercentage =
                 </h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Explore how the nervous system responds to changes in
-                  arterial pressure.
+                  Explore how the nervous system responds to changes
+                  in arterial pressure.
                 </p>
 
                 <div className="mt-5 text-sm font-medium text-cyan-400">
@@ -660,8 +683,8 @@ const experimentCompletionPercentage =
                 </h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Explore how ventilation and diffusion influence oxygen and
-                  carbon dioxide exchange.
+                  Explore how ventilation and diffusion influence
+                  oxygen and carbon dioxide exchange.
                 </p>
 
                 <span className="mt-5 inline-flex items-center gap-1 text-sm text-slate-300 group-hover:text-cyan-300">
