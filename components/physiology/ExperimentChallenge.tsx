@@ -1,30 +1,86 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import {
-    CheckCircle2,
-    Lightbulb,
-    RotateCcw,
-    XCircle,
+  CheckCircle2,
+  Lightbulb,
+  RotateCcw,
+  XCircle,
 } from "lucide-react";
 
 import { updateExperimentStatus } from "@/lib/physiology/progress";
 
+// ------------------------------------------------------
+// Types
+// ------------------------------------------------------
+
 type ExperimentOption = {
-    label: string;
-    value: string;
+  label: string;
+  value: string;
 };
 
 type ExperimentChallengeProps = {
-    question: string;
-    description?: string;
-    options: ExperimentOption[];
-    correctAnswer: string;
-    explanation: string;
-    observation?: string;
-    experimentId?: string;
+  question: string;
+  description?: string;
+  options: ExperimentOption[];
+  correctAnswer: string;
+  explanation: string;
+  observation?: string;
+  experimentId?: string;
 };
+
+// ------------------------------------------------------
+// Saved completion status
+// ------------------------------------------------------
+
+function subscribeToProgress(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener("storage", callback);
+  window.addEventListener("physiolab-progress-updated", callback);
+
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("physiolab-progress-updated", callback);
+  };
+}
+
+function getSavedCompletion(experimentId?: string) {
+  if (typeof window === "undefined" || !experimentId) {
+    return false;
+  }
+
+  try {
+    const saved = window.localStorage.getItem("physiolab-progress");
+
+    if (!saved) {
+      return false;
+    }
+
+    const progress: unknown = JSON.parse(saved);
+
+    if (
+      progress === null ||
+      typeof progress !== "object" ||
+      Array.isArray(progress)
+    ) {
+      return false;
+    }
+
+    return (
+      (progress as Record<string, unknown>)[experimentId] === "completed"
+    );
+  } catch {
+    return false;
+  }
+}
+
+// ------------------------------------------------------
+// Experiment challenge
+// ------------------------------------------------------
 
 export function ExperimentChallenge({
   question,
@@ -40,17 +96,39 @@ export function ExperimentChallenge({
 
   const [submitted, setSubmitted] = useState(false);
 
-  const [completed, setCompleted] = useState(false);
+  const [completedThisSession, setCompletedThisSession] =
+    useState(false);
+
+  const getCompletionSnapshot = () =>
+    getSavedCompletion(experimentId);
+
+  const getServerCompletionSnapshot = () => false;
+
+  const savedCompletion = useSyncExternalStore(
+    subscribeToProgress,
+    getCompletionSnapshot,
+    getServerCompletionSnapshot,
+  );
+
+  const completed = savedCompletion || completedThisSession;
 
   const isCorrect = selectedAnswer === correctAnswer;
 
+  // ----------------------------------------------------
+  // Answer submission
+  // ----------------------------------------------------
+
   function handleSubmit() {
-    if (!selectedAnswer) {
+    if (!selectedAnswer || submitted) {
       return;
     }
 
     setSubmitted(true);
   }
+
+  // ----------------------------------------------------
+  // Complete experiment
+  // ----------------------------------------------------
 
   function handleComplete() {
     if (!isCorrect || !experimentId || completed) {
@@ -58,13 +136,24 @@ export function ExperimentChallenge({
     }
 
     updateExperimentStatus(experimentId, "completed");
-    setCompleted(true);
+    setCompletedThisSession(true);
   }
+
+  // ----------------------------------------------------
+  // Retry challenge
+  // ----------------------------------------------------
 
   function handleReset() {
     setSelectedAnswer(null);
     setSubmitted(false);
+
+    // Keep completed progress intact.
+    // Retrying a challenge must not erase completion.
   }
+
+  // ----------------------------------------------------
+  // Render
+  // ----------------------------------------------------
 
   return (
     <section className="rounded-2xl border border-violet-400/15 bg-violet-400/3 p-6 sm:p-7">
@@ -84,6 +173,14 @@ export function ExperimentChallenge({
           </h3>
         </div>
       </div>
+
+      {/* Saved completion indicator */}
+      {completed && (
+        <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-sm font-medium text-emerald-300">
+          <CheckCircle2 size={18} />
+          This experiment is already completed.
+        </div>
+      )}
 
       {/* Question */}
       <div className="mt-6">
@@ -121,6 +218,7 @@ export function ExperimentChallenge({
                 }
               }}
               disabled={submitted}
+              aria-pressed={selected}
               className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition ${
                 showCorrect
                   ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
@@ -141,7 +239,7 @@ export function ExperimentChallenge({
         })}
       </div>
 
-      {/* Submit */}
+      {/* Submit answer */}
       {!submitted && (
         <button
           type="button"
@@ -153,9 +251,10 @@ export function ExperimentChallenge({
         </button>
       )}
 
-      {/* Result */}
+      {/* Answer result */}
       {submitted && (
         <div
+          aria-live="polite"
           className={`mt-6 rounded-xl border p-5 ${
             isCorrect
               ? "border-emerald-400/20 bg-emerald-400/5"
@@ -205,7 +304,7 @@ export function ExperimentChallenge({
             </div>
           )}
 
-          {/* Complete experiment */}
+          {/* Completion action */}
           {isCorrect && experimentId && (
             <div className="mt-5">
               {completed ? (
