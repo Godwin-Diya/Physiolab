@@ -1,15 +1,18 @@
+
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import {
   Activity,
   ArrowLeft,
+  BookOpen,
+  CheckCircle2,
+  FlaskConical,
   HeartPulse,
   Info,
   RotateCcw,
-  Sparkles,
   TrendingUp,
 } from "lucide-react";
 
@@ -17,6 +20,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -25,540 +29,728 @@ import {
 
 import { ExperimentChallenge } from "@/components/physiology/ExperimentChallenge";
 
+// ------------------------------------------------------
+// Constants and types
+// ------------------------------------------------------
+
+const INITIAL_HEART_RATE = 72;
+const INITIAL_STROKE_VOLUME = 70;
+
+const HEART_RATE_MIN = 40;
+const HEART_RATE_MAX = 180;
+
+const STROKE_VOLUME_MIN = 30;
+const STROKE_VOLUME_MAX = 150;
+
+type CardiacOutputDataPoint = {
+  heartRate: number;
+  cardiacOutput: number;
+};
+
+// ------------------------------------------------------
+// Cardiovascular physiology lab
+// ------------------------------------------------------
+
 export default function CardiovascularPage() {
-  const [heartRate, setHeartRate] = useState(70);
-  const [strokeVolume, setStrokeVolume] = useState(70);
+  const [heartRate, setHeartRate] = useState(INITIAL_HEART_RATE);
+  const [strokeVolume, setStrokeVolume] = useState(
+    INITIAL_STROKE_VOLUME,
+  );
 
-  const cardiacOutput = useMemo(() => {
-    return (heartRate * strokeVolume) / 1000;
-  }, [heartRate, strokeVolume]);
+  // Cardiac output (L/min) = HR (beats/min) × SV (mL/beat) ÷ 1000.
+  const cardiacOutput = (heartRate * strokeVolume) / 1000;
 
-  const chartData = useMemo(() => {
-    return [
-      { time: "0s", output: Number(cardiacOutput.toFixed(2)) },
-      {
-        time: "5s",
-        output: Number((cardiacOutput * 0.96).toFixed(2)),
-      },
-      {
-        time: "10s",
-        output: Number((cardiacOutput * 1.03).toFixed(2)),
-      },
-      {
-        time: "15s",
-        output: Number((cardiacOutput * 0.98).toFixed(2)),
-      },
-      {
-        time: "20s",
-        output: Number((cardiacOutput * 1.01).toFixed(2)),
-      },
-      {
-        time: "25s",
-        output: Number(cardiacOutput.toFixed(2)),
-      },
-    ];
-  }, [cardiacOutput]);
+  const baselineCardiacOutput =
+    (INITIAL_HEART_RATE * INITIAL_STROKE_VOLUME) / 1000;
 
-  const resetExperiment = () => {
-    setHeartRate(70);
-    setStrokeVolume(70);
-  };
+  const outputDifference = cardiacOutput - baselineCardiacOutput;
 
-  const status = useMemo(() => {
-    if (cardiacOutput < 4) {
+  const percentageChange =
+    baselineCardiacOutput > 0
+      ? (outputDifference / baselineCardiacOutput) * 100
+      : 0;
+
+  const chartData: CardiacOutputDataPoint[] = [];
+
+  for (
+    let rate = HEART_RATE_MIN;
+    rate <= HEART_RATE_MAX;
+    rate += 10
+  ) {
+    chartData.push({
+      heartRate: rate,
+      cardiacOutput: Number(((rate * strokeVolume) / 1000).toFixed(2)),
+    });
+  }
+
+  if (
+    !chartData.some((point) => point.heartRate === heartRate)
+  ) {
+    chartData.push({
+      heartRate,
+      cardiacOutput: Number(cardiacOutput.toFixed(2)),
+    });
+
+    chartData.sort((a, b) => a.heartRate - b.heartRate);
+  }
+
+  const isBaseline =
+    heartRate === INITIAL_HEART_RATE &&
+    strokeVolume === INITIAL_STROKE_VOLUME;
+
+  // ----------------------------------------------------
+  // Reset simulation
+  // ----------------------------------------------------
+
+  function handleReset() {
+    setHeartRate(INITIAL_HEART_RATE);
+    setStrokeVolume(INITIAL_STROKE_VOLUME);
+  }
+
+  // ----------------------------------------------------
+  // Physiological interpretation
+  // ----------------------------------------------------
+
+  function getInterpretation() {
+    if (isBaseline) {
       return {
-        label: "Low cardiac output",
+        title: "Baseline simulation",
         description:
-          "The calculated cardiac output is below the typical resting range.",
-        className: "text-amber-300",
-        dot: "bg-amber-300",
-        background: "bg-amber-400/10",
+          "At this starting point, a heart rate of 72 beats/min and a stroke volume of 70 mL/beat produce a cardiac output of approximately 5.04 L/min.",
+        tone: "border-cyan-400/20 bg-cyan-400/5 text-cyan-300",
       };
     }
 
-    if (cardiacOutput > 8) {
+    if (outputDifference > 0) {
       return {
-        label: "High cardiac output",
+        title: "Cardiac output has increased",
         description:
-          "The calculated cardiac output is elevated compared with a typical resting state.",
-        className: "text-cyan-300",
-        dot: "bg-cyan-300",
-        background: "bg-cyan-400/10",
+          "Your current combination of heart rate and stroke volume delivers more blood per minute than the baseline simulation. Examine which variable contributed most to the change.",
+        tone:
+          "border-emerald-400/20 bg-emerald-400/5 text-emerald-300",
+      };
+    }
+
+    if (outputDifference < 0) {
+      return {
+        title: "Cardiac output has decreased",
+        description:
+          "Your current combination of heart rate and stroke volume delivers less blood per minute than the baseline simulation. Consider how this change could affect oxygen delivery if it occurred in the body.",
+        tone: "border-amber-400/20 bg-amber-400/5 text-amber-300",
       };
     }
 
     return {
-      label: "Within resting range",
+      title: "Cardiac output is unchanged",
       description:
-        "The calculated cardiac output is within a typical resting physiological range.",
-      className: "text-emerald-300",
-      dot: "bg-emerald-300",
-      background: "bg-emerald-400/10",
+        "The calculated blood volume delivered per minute matches the baseline, although the heart rate and stroke volume may differ.",
+      tone: "border-cyan-400/20 bg-cyan-400/5 text-cyan-300",
     };
-  }, [cardiacOutput]);
+  }
 
-  const physiologyInsight = useMemo(() => {
-    if (heartRate > 100 && strokeVolume < 60) {
-      return "Heart rate is elevated while stroke volume is relatively low. This demonstrates that increasing heart rate does not necessarily guarantee a proportional increase in cardiac output.";
-    }
+  const interpretation = getInterpretation();
 
-    if (heartRate > 100) {
-      return "Increasing heart rate increases the number of cardiac cycles occurring each minute. When stroke volume remains adequate, cardiac output rises.";
-    }
-
-    if (strokeVolume > 90) {
-      return "A larger stroke volume means more blood is ejected with each heartbeat. With heart rate held constant, this increases cardiac output.";
-    }
-
-    if (strokeVolume < 55) {
-      return "A reduced stroke volume means less blood is ejected with each heartbeat. The heart may compensate by increasing heart rate.";
-    }
-
-    return "Both variables are close to typical resting values, producing a cardiac output consistent with a resting physiological state.";
-  }, [heartRate, strokeVolume]);
-
-  const beatDuration = Math.max(0.4, 60 / heartRate);
+  // ----------------------------------------------------
+  // Page layout
+  // ----------------------------------------------------
 
   return (
-    <main className="min-h-screen bg-[#07111f] text-white">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-[#091525]">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
+    <main className="min-h-screen bg-[#080d18] text-white">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Header */}
+        <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <Link
             href="/"
-            className="flex items-center gap-3 text-sm text-slate-400 transition hover:text-white"
+            className="group inline-flex items-center gap-3"
           >
-            <ArrowLeft size={18} />
-            <span>Back to dashboard</span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-400 text-slate-950">
-              <Activity size={19} />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-rose-400/20 bg-rose-400/10 text-rose-300">
+              <HeartPulse size={23} />
             </div>
 
-            <span className="font-semibold">Physiolab</span>
+            <div>
+              <p className="text-lg font-bold tracking-tight">
+                Physiolab
+              </p>
+              <p className="text-xs text-slate-400">
+                Human Physiology
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href="/experiments"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+          >
+            <ArrowLeft size={16} />
+            Experiment Hub
+          </Link>
+        </header>
+
+        {/* Hero */}
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-rose-400/10 via-[#101827] to-cyan-400/5 p-6 sm:p-9">
+          <div className="pointer-events-none absolute -right-12 -top-16 h-64 w-64 rounded-full bg-rose-400/5 blur-3xl" />
+
+          <div className="relative max-w-3xl">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-rose-400/20 bg-rose-400/10 px-3 py-1.5 text-xs font-medium text-rose-300">
+              <FlaskConical size={14} />
+              Interactive cardiovascular lab
+            </div>
+
+            <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
+              Cardiac Output Lab
+            </h1>
+
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
+              Investigate how heart rate and stroke volume
+              determine cardiac output. Adjust each variable,
+              observe the mathematical response, and connect
+              your findings to cardiovascular physiology.
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3 text-xs text-slate-400">
+              <span className="rounded-full border border-white/10 bg-white/3 px-3 py-2">
+                <Activity className="mr-1.5 inline" size={14} />
+                Two adjustable variables
+              </span>
+
+              <span className="rounded-full border border-white/10 bg-white/3 px-3 py-2">
+                <TrendingUp className="mr-1.5 inline" size={14} />
+                Live calculation
+              </span>
+            </div>
           </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
-        {/* Introduction */}
-        <section className="mb-10">
-          <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
-            <Sparkles size={14} />
-            Cardiovascular Physiology
-          </div>
-
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-            Cardiac Output Lab
-          </h1>
-
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
-            Manipulate cardiovascular variables and observe how the heart&apos;s
-            pumping performance changes in real time.
-          </p>
         </section>
 
-        {/* Main Lab */}
-        <section className="grid gap-6 lg:grid-cols-[1.45fr_1fr]">
-          {/* Experiment Controls */}
-          <div className="rounded-3xl border border-white/10 bg-white/2.5 p-6 sm:p-8">
-            <div className="flex items-center justify-between">
+        {/* Formula */}
+        <section className="mb-8 grid gap-5 lg:grid-cols-[1fr_1.3fr]">
+          <div className="rounded-2xl border border-white/10 bg-[#101827] p-5 sm:p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300">
+                <BookOpen size={20} />
+              </div>
+
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                  Experiment controls
+                <h2 className="font-semibold">
+                  The physiological equation
+                </h2>
+                <p className="text-xs text-slate-500">
+                  The relationship to investigate
+                </p>
+              </div>
+            </div>
+
+            <div className="my-6 rounded-2xl border border-cyan-400/15 bg-cyan-400/5 px-4 py-6 text-center">
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-cyan-300">
+                Cardiac output
+              </p>
+
+              <p className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+                CO = HR × SV
+              </p>
+
+              <p className="mt-3 text-sm text-slate-400">
+                In this lab, divide by 1,000 to convert mL/min
+                to L/min.
+              </p>
+            </div>
+
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-rose-400/10 text-xs font-bold text-rose-300">
+                  HR
+                </span>
+
+                <div>
+                  <p className="font-medium text-slate-200">
+                    Heart rate
+                  </p>
+                  <p className="mt-1 leading-6 text-slate-400">
+                    The number of heartbeats per minute.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-400/10 text-xs font-bold text-violet-300">
+                  SV
+                </span>
+
+                <div>
+                  <p className="font-medium text-slate-200">
+                    Stroke volume
+                  </p>
+                  <p className="mt-1 leading-6 text-slate-400">
+                    The volume of blood ejected by one ventricle
+                    with each heartbeat.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Live result */}
+          <div className="rounded-2xl border border-white/10 bg-[#101827] p-5 sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Live simulation result
                 </p>
 
-                <h2 className="mt-1 text-xl font-semibold">
-                  Manipulate the variables
+                <h2 className="mt-2 text-xl font-bold">
+                  Your cardiac output
                 </h2>
               </div>
 
-              <button
-                type="button"
-                onClick={resetExperiment}
-                className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-400 transition hover:bg-white/5 hover:text-white"
-              >
-                <RotateCcw size={14} />
-                Reset
-              </button>
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-400/10 text-rose-300">
+                <HeartPulse size={23} />
+              </div>
             </div>
 
-            {/* Heart Rate */}
-            <div className="mt-10">
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-300">
-                    Heart Rate
-                  </p>
+            <div className="mt-7 flex flex-wrap items-end gap-3">
+              <p
+                className="text-5xl font-bold tracking-tight tabular-nums sm:text-6xl"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                {cardiacOutput.toFixed(2)}
+              </p>
 
-                  <p className="mt-1 text-xs text-slate-500">
-                    Beats per minute
-                  </p>
-                </div>
+              <p className="pb-1 text-sm text-slate-400">
+                litres/min
+              </p>
+            </div>
 
-                <div className="text-right">
-                  <span className="text-3xl font-bold">{heartRate}</span>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-white/10 bg-white/2.5 p-4">
+                <p className="text-xs text-slate-500">
+                  Heart rate
+                </p>
+                <p className="mt-2 text-xl font-semibold tabular-nums">
+                  {heartRate}
+                  <span className="ml-1 text-xs font-normal text-slate-400">
+                    bpm
+                  </span>
+                </p>
+              </div>
 
-                  <span className="ml-1 text-sm text-slate-500">bpm</span>
-                </div>
+              <div className="rounded-xl border border-white/10 bg-white/2.5 p-4">
+                <p className="text-xs text-slate-500">
+                  Stroke volume
+                </p>
+                <p className="mt-2 text-xl font-semibold tabular-nums">
+                  {strokeVolume}
+                  <span className="ml-1 text-xs font-normal text-slate-400">
+                    mL/beat
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-white/10 bg-white/2.5 p-4">
+              <p className="text-xs text-slate-500">
+                Calculation
+              </p>
+
+              <p className="mt-2 text-sm font-medium text-slate-200">
+                {heartRate} × {strokeVolume} ÷ 1,000 ={" "}
+                {cardiacOutput.toFixed(2)} L/min
+              </p>
+            </div>
+
+            <div
+              className={`mt-4 rounded-xl border p-4 ${interpretation.tone}`}
+            >
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={17} />
+                <p className="text-sm font-semibold">
+                  {interpretation.title}
+                </p>
+              </div>
+
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                {interpretation.description}
+              </p>
+
+              {!isBaseline && (
+                <p className="mt-3 text-xs font-medium text-slate-400">
+                  Change from baseline:{" "}
+                  {outputDifference > 0 ? "+" : ""}
+                  {outputDifference.toFixed(2)} L/min (
+                  {percentageChange > 0 ? "+" : ""}
+                  {percentageChange.toFixed(1)}%)
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Simulation controls */}
+        <section className="mb-8 rounded-2xl border border-white/10 bg-[#101827] p-5 sm:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                Simulation controls
+              </p>
+
+              <h2 className="mt-2 text-2xl font-bold">
+                Change the variables
+              </h2>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                Move either slider and observe how cardiac
+                output changes. Keep one variable constant to
+                isolate the effect of the other.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleReset}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/3 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
+            >
+              <RotateCcw size={16} />
+              Reset simulation
+            </button>
+          </div>
+
+          <div className="mt-8 grid gap-8 lg:grid-cols-2">
+            {/* Heart rate slider */}
+            <div className="rounded-2xl border border-white/10 bg-white/2.5 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <label
+                  htmlFor="heart-rate"
+                  className="font-semibold text-slate-200"
+                >
+                  Heart rate
+                </label>
+
+                <span className="rounded-lg border border-rose-400/20 bg-rose-400/10 px-3 py-1.5 text-sm font-semibold tabular-nums text-rose-300">
+                  {heartRate} bpm
+                </span>
               </div>
 
               <input
+                id="heart-rate"
                 type="range"
-                min="40"
-                max="140"
+                min={HEART_RATE_MIN}
+                max={HEART_RATE_MAX}
+                step={1}
                 value={heartRate}
                 onChange={(event) =>
                   setHeartRate(Number(event.target.value))
                 }
-                aria-label="Heart rate in beats per minute"
-                className="mt-6 w-full accent-cyan-400"
+                aria-valuetext={`${heartRate} beats per minute`}
+                className="mt-6 w-full cursor-pointer accent-rose-400"
               />
 
-              <div className="mt-2 flex justify-between text-[11px] text-slate-600">
-                <span>40 bpm</span>
-                <span>140 bpm</span>
+              <div className="mt-2 flex justify-between text-xs text-slate-500">
+                <span>{HEART_RATE_MIN} bpm</span>
+                <span>Resting reference: 72 bpm</span>
+                <span>{HEART_RATE_MAX} bpm</span>
               </div>
+
+              <p className="mt-5 text-sm leading-6 text-slate-400">
+                Increasing heart rate tends to increase cardiac
+                output when stroke volume is maintained. At
+                sufficiently high rates, reduced filling time
+                can limit stroke volume.
+              </p>
             </div>
 
-            {/* Stroke Volume */}
-            <div className="mt-10">
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-300">
-                    Stroke Volume
-                  </p>
+            {/* Stroke volume slider */}
+            <div className="rounded-2xl border border-white/10 bg-white/2.5 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <label
+                  htmlFor="stroke-volume"
+                  className="font-semibold text-slate-200"
+                >
+                  Stroke volume
+                </label>
 
-                  <p className="mt-1 text-xs text-slate-500">
-                    Blood pumped per heartbeat
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-3xl font-bold">{strokeVolume}</span>
-
-                  <span className="ml-1 text-sm text-slate-500">mL</span>
-                </div>
+                <span className="rounded-lg border border-violet-400/20 bg-violet-400/10 px-3 py-1.5 text-sm font-semibold tabular-nums text-violet-300">
+                  {strokeVolume} mL
+                </span>
               </div>
 
               <input
+                id="stroke-volume"
                 type="range"
-                min="40"
-                max="120"
+                min={STROKE_VOLUME_MIN}
+                max={STROKE_VOLUME_MAX}
+                step={1}
                 value={strokeVolume}
                 onChange={(event) =>
                   setStrokeVolume(Number(event.target.value))
                 }
-                aria-label="Stroke volume in milliliters"
-                className="mt-6 w-full accent-cyan-400"
+                aria-valuetext={`${strokeVolume} millilitres per beat`}
+                className="mt-6 w-full cursor-pointer accent-violet-400"
               />
 
-              <div className="mt-2 flex justify-between text-[11px] text-slate-600">
-                <span>40 mL</span>
-                <span>120 mL</span>
-              </div>
-            </div>
-
-            {/* Formula */}
-            <div className="mt-10 rounded-2xl border border-cyan-400/10 bg-cyan-400/3 p-5">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
-                <Activity size={14} />
-                Physiological relationship
+              <div className="mt-2 flex justify-between text-xs text-slate-500">
+                <span>{STROKE_VOLUME_MIN} mL</span>
+                <span>Reference: 70 mL</span>
+                <span>{STROKE_VOLUME_MAX} mL</span>
               </div>
 
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-center">
-                <div className="rounded-xl bg-white/5 px-4 py-3">
-                  <p className="text-xs text-slate-500">Heart Rate</p>
-
-                  <p className="mt-1 font-semibold">{heartRate} bpm</p>
-                </div>
-
-                <span className="text-xl text-slate-600">×</span>
-
-                <div className="rounded-xl bg-white/5 px-4 py-3">
-                  <p className="text-xs text-slate-500">Stroke Volume</p>
-
-                  <p className="mt-1 font-semibold">{strokeVolume} mL</p>
-                </div>
-
-                <span className="text-xl text-slate-600">=</span>
-
-                <div className="rounded-xl bg-cyan-400/10 px-4 py-3">
-                  <p className="text-xs text-cyan-400">Cardiac Output</p>
-
-                  <p className="mt-1 font-semibold text-cyan-300">
-                    {cardiacOutput.toFixed(2)} L/min
-                  </p>
-                </div>
-              </div>
+              <p className="mt-5 text-sm leading-6 text-slate-400">
+                Stroke volume is influenced by preload,
+                myocardial contractility, and afterload. For
+                this simplified model, changing stroke volume
+                directly changes the calculated output.
+              </p>
             </div>
           </div>
 
-          {/* Live Visualization */}
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-b from-[#0c1e30] to-[#091525] p-6 sm:p-8">
-            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-rose-500/10 blur-3xl" />
+          <div className="mt-6 flex items-start gap-3 rounded-xl border border-cyan-400/15 bg-cyan-400/5 p-4">
+            <Info
+              size={18}
+              className="mt-0.5 shrink-0 text-cyan-300"
+            />
 
-            <div className="relative">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                Live physiology
-              </p>
-
-              <h2 className="mt-1 text-xl font-semibold">
-                Cardiovascular response
-              </h2>
-
-              {/* Animated Heart */}
-              <div className="flex min-h-70 items-center justify-center">
-                <div
-                  className="flex h-40 w-40 items-center justify-center rounded-full bg-rose-500/10 shadow-[0_0_80px_rgba(244,63,94,0.12)]"
-                  style={{
-                    animation: `heartbeat ${beatDuration}s ease-in-out infinite`,
-                  }}
-                >
-                  <HeartPulse
-                    size={110}
-                    strokeWidth={1.2}
-                    className="text-rose-400"
-                  />
-                </div>
-              </div>
-
-              {/* Cardiac Output */}
-              <div className="text-center">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                  Cardiac Output
-                </p>
-
-                <p className="mt-2 text-5xl font-bold tracking-tight">
-                  {cardiacOutput.toFixed(2)}
-                </p>
-
-                <p className="mt-1 text-sm text-slate-500">liters / minute</p>
-              </div>
-
-              {/* Status */}
-              <div className={`mt-8 rounded-2xl p-4 ${status.background}`}>
-                <div className="flex items-center gap-2">
-                  <span className={`h-2 w-2 rounded-full ${status.dot}`} />
-
-                  <p className={`text-sm font-medium ${status.className}`}>
-                    {status.label}
-                  </p>
-                </div>
-
-                <p className="mt-2 text-xs leading-5 text-slate-500">
-                  {status.description}
-                </p>
-              </div>
-            </div>
+            <p className="text-sm leading-6 text-slate-300">
+              <span className="font-semibold text-cyan-300">
+                Experimental tip:
+              </span>{" "}
+              First hold stroke volume constant and vary heart
+              rate. Then hold heart rate constant and vary
+              stroke volume. This helps you identify each
+              variable&apos;s contribution to cardiac output.
+            </p>
           </div>
         </section>
 
-        {/* Cardiac Output Chart */}
-        <section className="mt-6 rounded-3xl border border-white/10 bg-white/2.5 p-6 sm:p-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
-              <TrendingUp size={20} />
-            </div>
+        {/* Chart */}
+        <section className="mb-8 rounded-2xl border border-white/10 bg-[#101827] p-5 sm:p-7">
+          <div className="mb-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
+              Visual feedback
+            </p>
 
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                Live data
-              </p>
+            <h2 className="mt-2 text-xl font-bold sm:text-2xl">
+              Heart rate versus cardiac output
+            </h2>
 
-              <h2 className="mt-1 text-xl font-semibold">
-                Cardiac output trend
-              </h2>
-            </div>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              This graph shows the calculated cardiac output at
+              different heart rates while holding your current
+              stroke volume constant.
+            </p>
           </div>
 
-          <div className="mt-8 h-70 w-full">
+          <div className="h-72 w-full sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
+              <LineChart
+                data={chartData}
+                margin={{
+                  top: 12,
+                  right: 12,
+                  left: 0,
+                  bottom: 8,
+                }}
+              >
                 <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,0.06)"
+                  stroke="rgba(148,163,184,0.12)"
+                  strokeDasharray="4 4"
                 />
 
                 <XAxis
-                  dataKey="time"
-                  stroke="#64748b"
+                  dataKey="heartRate"
+                  type="number"
+                  domain={[HEART_RATE_MIN, HEART_RATE_MAX]}
+                  tick={{ fill: "#94a3b8", fontSize: 12 }}
                   tickLine={false}
-                  axisLine={false}
+                  axisLine={{ stroke: "rgba(148,163,184,0.2)" }}
+                  label={{
+                    value: "Heart rate (beats/min)",
+                    position: "insideBottom",
+                    offset: -3,
+                    fill: "#94a3b8",
+                    fontSize: 12,
+                  }}
                 />
 
                 <YAxis
-                  stroke="#64748b"
+                  domain={[0, "auto"]}
+                  tick={{ fill: "#94a3b8", fontSize: 12 }}
                   tickLine={false}
                   axisLine={false}
-                  width={45}
+                  width={55}
+                  label={{
+                    value: "Cardiac output (L/min)",
+                    angle: -90,
+                    position: "insideLeft",
+                    fill: "#94a3b8",
+                    fontSize: 12,
+                  }}
                 />
 
                 <Tooltip
                   contentStyle={{
-                    background: "#0c1e30",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    backgroundColor: "#101827",
+                    border: "1px solid rgba(148,163,184,0.2)",
                     borderRadius: "12px",
-                    color: "#fff",
+                    color: "#e2e8f0",
                   }}
+                  labelStyle={{ color: "#cbd5e1" }}
                   formatter={(value) => [
-                    `${value} L/min`,
-                    "Cardiac Output",
+                    `${Number(value).toFixed(2)} L/min`,
+                    "Cardiac output",
                   ]}
+                  labelFormatter={(label) =>
+                    `Heart rate: ${label} bpm`
+                  }
+                />
+
+                <ReferenceLine
+                  x={heartRate}
+                  stroke="#fb7185"
+                  strokeDasharray="4 4"
                 />
 
                 <Line
                   type="monotone"
-                  dataKey="output"
+                  dataKey="cardiacOutput"
+                  name="Cardiac output"
                   stroke="#22d3ee"
                   strokeWidth={3}
                   dot={false}
-                  activeDot={{ r: 5 }}
+                  activeDot={{
+                    r: 6,
+                    fill: "#22d3ee",
+                    stroke: "#080d18",
+                    strokeWidth: 2,
+                  }}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </section>
 
-        {/* Physiology Insight */}
-        <section className="mt-6 rounded-3xl border border-cyan-400/10 bg-cyan-400/2.5 p-6 sm:p-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
-              <Sparkles size={20} />
-            </div>
-
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/2.5 p-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
-                Physiology insight
+              <p className="text-sm font-medium text-slate-200">
+                Current simulation point
               </p>
 
-              <h2 className="mt-2 text-xl font-semibold">
-                What is happening?
-              </h2>
-
-              <p className="mt-4 max-w-4xl text-sm leading-7 text-slate-400">
-                {physiologyInsight}
+              <p className="mt-1 text-xs text-slate-500">
+                HR {heartRate} bpm · SV {strokeVolume} mL/beat
               </p>
             </div>
+
+            <p className="text-lg font-bold tabular-nums text-cyan-300">
+              {cardiacOutput.toFixed(2)} L/min
+            </p>
           </div>
         </section>
 
-        {/* Physiological Explanation */}
-        <section className="mt-6 rounded-3xl border border-white/10 bg-white/2.5 p-6 sm:p-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
-              <Info size={20} />
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
-                Why does this happen?
-              </p>
-
-              <h2 className="mt-2 text-xl font-semibold">
-                Cardiac output depends on two major variables.
-              </h2>
-
-              <p className="mt-4 max-w-4xl text-sm leading-7 text-slate-400">
-                Cardiac output is the volume of blood pumped by one
-                ventricle each minute. It is determined by multiplying
-                heart rate by stroke volume.
-              </p>
-
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-5">
-                  <p className="font-semibold text-slate-200">Heart Rate</p>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
-                    The number of heartbeats occurring each minute.
-                    Increasing heart rate can increase cardiac output
-                    when stroke volume remains adequate.
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-5">
-                  <p className="font-semibold text-slate-200">
-                    Stroke Volume
-                  </p>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
-                    The volume of blood ejected by a ventricle with
-                    each heartbeat. Preload, afterload, and
-                    contractility can influence stroke volume.
-                  </p>
-                </div>
+        {/* Physiology insight */}
+        <section className="mb-8 grid gap-5 lg:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-[#101827] p-5 sm:p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-400/10 text-rose-300">
+                <HeartPulse size={21} />
               </div>
+
+              <h2 className="text-lg font-semibold">
+                Why cardiac output matters
+              </h2>
             </div>
+
+            <p className="mt-4 text-sm leading-7 text-slate-400">
+              Cardiac output describes the volume of blood
+              pumped by one ventricle each minute. Together
+              with the oxygen content of blood, it influences
+              how much oxygen can be delivered to tissues.
+              The body adjusts heart rate and stroke volume
+              to meet changing demands, such as during
+              exercise.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#101827] p-5 sm:p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-400/10 text-violet-300">
+                <TrendingUp size={21} />
+              </div>
+
+              <h2 className="text-lg font-semibold">
+                Interpret your results
+              </h2>
+            </div>
+
+            <p className="mt-4 text-sm leading-7 text-slate-400">
+              A higher calculated output does not automatically
+              mean better cardiovascular function, and a lower
+              value does not by itself establish disease.
+              Interpretation depends on the person&apos;s
+              physiological state, activity, blood pressure,
+              oxygen demand, and other clinical findings.
+            </p>
           </div>
         </section>
 
-        {/* Experiment Challenge */}
-        <div className="mt-6">
+        {/* Experiment challenge */}
+        <section className="mb-8">
+          <div className="mb-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">
+              Test your understanding
+            </p>
+
+            <h2 className="mt-2 text-2xl font-bold">
+              Apply what you have learned
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Use the cardiac output equation to predict the
+              effect of changing heart rate while stroke
+              volume remains constant.
+            </p>
+          </div>
+
           <ExperimentChallenge
             experimentId="cardiac-output"
-            question="If heart rate increases while stroke volume stays constant, what should happen to cardiac output?"
-            description="Use the cardiac output relationship to make your prediction before changing the simulation."
+            question="If heart rate increases to 100 beats/min while stroke volume remains at 70 mL/beat, what is the calculated cardiac output?"
+            description="Assume stroke volume remains constant and use CO = HR × SV ÷ 1,000 to calculate the result in litres per minute."
             options={[
               {
-                label: "Cardiac output decreases",
-                value: "decrease",
+                label: "4.0 L/min",
+                value: "4.0",
               },
               {
-                label: "Cardiac output increases",
-                value: "increase",
+                label: "7.0 L/min",
+                value: "7.0",
               },
               {
-                label: "Cardiac output stays approximately the same",
-                value: "same",
+                label: "10.0 L/min",
+                value: "10.0",
+              },
+              {
+                label: "0.7 L/min",
+                value: "0.7",
               },
             ]}
-            correctAnswer="increase"
-            explanation="Cardiac output equals heart rate multiplied by stroke volume. When stroke volume stays constant, increasing heart rate increases the amount of blood pumped by the heart each minute."
-            observation="Increase the heart rate slider while keeping stroke volume unchanged. Watch the cardiac output value and chart respond."
+            correctAnswer="7.0"
+            explanation="Cardiac output = 100 beats/min × 70 mL/beat = 7,000 mL/min. Dividing by 1,000 converts the result to 7.0 L/min."
+            observation="Return to the sliders and set heart rate to 100 bpm and stroke volume to 70 mL/beat. Compare the live result with your calculation."
           />
-        </div>
-
-        {/* Core Equation */}
-        <section className="mt-6 rounded-3xl border border-white/10 bg-linear-to-r from-cyan-400/5 to-blue-500/5 p-8 text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-            Core equation
-          </p>
-
-          <p className="mt-4 text-2xl font-semibold sm:text-3xl">
-            Cardiac Output = Heart Rate × Stroke Volume
-          </p>
-
-          <p className="mt-3 text-sm text-slate-500">CO = HR × SV</p>
         </section>
+
+        {/* Footer */}
+        <footer className="border-t border-white/10 py-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+            <p>
+              Physiolab · Cardiovascular Physiology
+            </p>
+
+            <Link
+              href="/experiments"
+              className="transition hover:text-cyan-300"
+            >
+              Return to Experiment Hub
+            </Link>
+          </div>
+        </footer>
       </div>
-
-      {/* Heartbeat Animation */}
-      <style jsx global>{`
-        @keyframes heartbeat {
-          0%,
-          100% {
-            transform: scale(1);
-          }
-
-          15% {
-            transform: scale(1.08);
-          }
-
-          30% {
-            transform: scale(1);
-          }
-
-          45% {
-            transform: scale(1.05);
-          }
-
-          60% {
-            transform: scale(1);
-          }
-        }
-      `}</style>
     </main>
   );
 }
