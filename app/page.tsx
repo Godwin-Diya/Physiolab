@@ -85,7 +85,11 @@ const navigation = [
   { name: "Systems", icon: Layers3, href: "/cardiovascular" },
   { name: "Simulations", icon: Activity, href: "/cardiovascular" },
   { name: "Experiments", icon: FlaskConical, href: "/experiments" },
-  { name: "Clinical Cases", icon: Stethoscope, href: "/experiments" },
+  {
+    name: "Clinical Learning Centre",
+    icon: Stethoscope,
+    href: "/clinical",
+  },
   { name: "Quiz", icon: Trophy, href: "/experiments" },
 ];
 
@@ -96,10 +100,7 @@ function subscribeToProgress(callback: () => void) {
   }
 
   window.addEventListener("storage", callback);
-  window.addEventListener(
-    "physiolab-progress-updated",
-    callback,
-  );
+  window.addEventListener("physiolab-progress-updated", callback);
 
   return () => {
     window.removeEventListener("storage", callback);
@@ -409,7 +410,6 @@ export default function HomePage() {
 
                 {/* Progress bars */}
                 <div className="mt-7">
-                  {/* Cardiovascular module progress */}
                   <div className="mb-2 flex justify-between text-xs">
                     <span className="text-slate-500">
                       Progress
@@ -616,9 +616,14 @@ export default function HomePage() {
               <h2 className="mt-1 text-2xl font-bold">
                 Run an experiment
               </h2>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                Move between interactive physiology experiments and
+                clinical learning resources from one place.
+              </p>
             </div>
 
-            <div className="grid gap-5 md:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               {/* Cardiac Output Lab */}
               <Link
                 href="/cardiovascular"
@@ -692,13 +697,89 @@ export default function HomePage() {
                   <ArrowRight size={15} />
                 </span>
               </Link>
+
+              {/* Clinical Learning Centre */}
+              <Link
+                href="/clinical"
+                className="group rounded-2xl border border-violet-400/20 bg-linear-to-br from-violet-400/8 to-white/2.5 p-6 text-left transition hover:-translate-y-1 hover:border-violet-400/40 hover:bg-violet-400/10"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-400/10 text-violet-300">
+                  <Stethoscope size={22} />
+                </div>
+
+                <p className="mt-5 text-xs uppercase tracking-[0.18em] text-violet-300">
+                  Clinical learning
+                </p>
+
+                <h3 className="mt-2 text-lg font-semibold">
+                  ECG &amp; Echo Centre
+                </h3>
+
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  Explore ECG lessons, echocardiography concepts,
+                  clinical quizzes and educational case reviews.
+                </p>
+
+                <span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-violet-300 transition group-hover:text-violet-200">
+                  Enter clinical centre
+                  <ArrowRight
+                    size={15}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                </span>
+              </Link>
             </div>
+          </section>
+
+          {/* Clinical Learning feature banner */}
+          <section className="mt-10">
+            <Link
+              href="/clinical"
+              className="group relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-violet-400/15 bg-violet-400/4 p-6 transition hover:border-violet-400/30 sm:flex-row sm:items-center sm:justify-between sm:p-8"
+            >
+              <div className="pointer-events-none absolute -right-12 -top-20 h-48 w-48 rounded-full bg-violet-400/10 blur-3xl" />
+
+              <div className="relative flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-400/10 text-violet-300">
+                  <Stethoscope size={24} />
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">
+                    Beyond the laboratory
+                  </p>
+
+                  <h2 className="mt-2 text-xl font-bold">
+                    Build your clinical reasoning skills
+                  </h2>
+
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                    Visit the Clinical Learning Centre for ECG and
+                    Echo Academy lessons, quizzes and educational
+                    case studies.
+                  </p>
+                </div>
+              </div>
+
+              <span className="relative inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-violet-300 transition group-hover:text-violet-200">
+                Explore clinical learning
+                <ArrowRight
+                  size={17}
+                  className="transition-transform group-hover:translate-x-1"
+                />
+              </span>
+            </Link>
           </section>
 
           {/* Footer */}
           <footer className="mt-16 border-t border-white/10 py-8 text-center">
             <p className="text-xs text-slate-600">
               Physiolab · Interactive Human Physiology Learning Platform
+            </p>
+
+            <p className="mt-2 text-xs text-slate-600">
+              Educational resource only. Clinical case materials are
+              intended for learning, not independent diagnosis.
             </p>
           </footer>
         </div>

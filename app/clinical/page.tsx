@@ -1,7 +1,8 @@
+
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -221,7 +222,7 @@ const ecgQuizOptions = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/* Small reusable components                                                  */
+/* Reusable components                                                        */
 /* -------------------------------------------------------------------------- */
 
 function SectionHeading({
@@ -238,9 +239,11 @@ function SectionHeading({
       <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">
         {eyebrow}
       </p>
+
       <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
         {title}
       </h2>
+
       <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
         {description}
       </p>
@@ -252,7 +255,7 @@ function Panel({
   children,
   className = "",
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   return (
@@ -275,15 +278,18 @@ function EcgIllustration() {
           backgroundSize: "20px 20px",
         }}
       />
+
       <div className="relative">
         <div className="mb-3 flex items-center justify-between gap-3">
           <span className="text-xs font-semibold uppercase tracking-widest text-rose-200">
             ECG waveform
           </span>
+
           <span className="rounded-full border border-rose-300/20 bg-rose-300/10 px-2 py-1 text-[10px] text-rose-100">
             Schematic
           </span>
         </div>
+
         <svg
           viewBox="0 0 600 180"
           role="img"
@@ -298,12 +304,14 @@ function EcgIllustration() {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
+
           <g fill="#fecdd3" fontSize="13" fontWeight="600">
             <text x="103" y="58">P</text>
             <text x="208" y="23">QRS</text>
             <text x="385" y="50">T</text>
           </g>
         </svg>
+
         <p className="mt-2 text-xs leading-5 text-slate-400">
           Illustrative waveform only. Not a real ECG recording.
         </p>
@@ -319,10 +327,12 @@ function EchoIllustration() {
         <span className="text-xs font-semibold uppercase tracking-widest text-cyan-200">
           Cardiac imaging
         </span>
+
         <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-[10px] text-cyan-100">
           Schematic
         </span>
       </div>
+
       <svg
         viewBox="0 0 600 250"
         role="img"
@@ -335,17 +345,20 @@ function EchoIllustration() {
             <stop offset="100%" stopColor="#0e7490" stopOpacity="0.12" />
           </linearGradient>
         </defs>
+
         <path
           d="M300 25 L115 225 L485 225 Z"
           fill="url(#echoGlow)"
           opacity="0.45"
         />
+
         <path
           d="M300 45 C265 12 211 48 226 94 C241 139 294 179 300 185 C306 179 359 139 374 94 C389 48 335 12 300 45 Z"
           fill="none"
           stroke="#a5f3fc"
           strokeWidth="4"
         />
+
         <path
           d="M300 45 C294 85 303 115 300 185 M228 94 Q266 85 300 105 Q338 80 374 94"
           fill="none"
@@ -353,6 +366,7 @@ function EchoIllustration() {
           strokeWidth="2"
           strokeDasharray="5 5"
         />
+
         <path
           d="M115 225 L485 225"
           stroke="#67e8f9"
@@ -360,6 +374,7 @@ function EchoIllustration() {
           opacity="0.5"
         />
       </svg>
+
       <p className="mt-2 text-xs leading-5 text-slate-400">
         Concept illustration only. It is not an ultrasound image.
       </p>
@@ -382,7 +397,9 @@ export default function ClinicalPage() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [uploadMessage, setUploadMessage] = useState("");
 
-  /* Revoke the previous local image URL when it changes or the page unmounts. */
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /* Release the temporary browser URL when it is replaced or no longer needed. */
   useEffect(() => {
     return () => {
       if (previewUrl) {
@@ -425,6 +442,9 @@ export default function ClinicalPage() {
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
+    /* Allow the same file to be selected again later. */
+    event.target.value = "";
+
     setSelectedFile(null);
     setPreviewUrl("");
     setShowInterpretation(false);
@@ -443,7 +463,6 @@ export default function ClinicalPage() {
 
     if (!allowedTypes.includes(file.type)) {
       setUploadMessage("Choose a JPG, PNG, WebP, or PDF file.");
-      event.target.value = "";
       return;
     }
 
@@ -451,7 +470,6 @@ export default function ClinicalPage() {
 
     if (file.size > maxFileSize) {
       setUploadMessage("The file is too large. Choose a file under 10 MB.");
-      event.target.value = "";
       return;
     }
 
@@ -471,6 +489,10 @@ export default function ClinicalPage() {
     setPreviewUrl("");
     setUploadMessage("");
     setShowInterpretation(false);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
   function resetQuiz() {
@@ -552,10 +574,12 @@ export default function ClinicalPage() {
                 <CheckCircle2 size={14} className="text-emerald-300" />
                 Guided learning
               </span>
+
               <span className="inline-flex items-center gap-2">
                 <BookOpen size={14} className="text-cyan-300" />
                 Case-based practice
               </span>
+
               <span className="inline-flex items-center gap-2">
                 <ShieldCheck size={14} className="text-violet-300" />
                 Privacy-conscious demo
@@ -638,7 +662,8 @@ export default function ClinicalPage() {
                       interpretation.
                     </p>
                   </div>
-                  <Activity className="shrink-0 text-rose-300" size={22} />
+
+                  <Activity size={22} className="shrink-0 text-rose-300" />
                 </div>
 
                 <div className="space-y-3">
@@ -650,22 +675,27 @@ export default function ClinicalPage() {
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-300/10 text-sm font-semibold text-rose-200">
                         {lesson.number}
                       </div>
+
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <h4 className="font-medium text-white">
                             {lesson.title}
                           </h4>
+
                           <span className="rounded-full bg-white/5 px-2 py-1 text-[10px] text-slate-400">
                             {lesson.tag}
                           </span>
                         </div>
+
                         <p className="mt-1 text-sm leading-6 text-slate-400">
                           {lesson.description}
                         </p>
+
                         <p className="mt-2 text-xs text-slate-500">
                           {lesson.duration} · Learning lesson
                         </p>
                       </div>
+
                       <ChevronRight
                         size={18}
                         className="mt-1 shrink-0 text-slate-500"
@@ -678,7 +708,7 @@ export default function ClinicalPage() {
               <div className="space-y-6">
                 <Panel>
                   <div className="mb-4 flex items-center gap-2">
-                    <CircleHelp className="text-cyan-300" size={20} />
+                    <CircleHelp size={20} className="text-cyan-300" />
                     <h3 className="font-semibold text-white">
                       Quick knowledge check
                     </h3>
@@ -739,6 +769,7 @@ export default function ClinicalPage() {
                     >
                       Check answer
                     </button>
+
                     <button
                       type="button"
                       onClick={resetQuiz}
@@ -752,7 +783,11 @@ export default function ClinicalPage() {
 
                 <Panel>
                   <div className="flex items-start gap-3">
-                    <Info className="mt-0.5 shrink-0 text-cyan-300" size={19} />
+                    <Info
+                      size={19}
+                      className="mt-0.5 shrink-0 text-cyan-300"
+                    />
+
                     <div>
                       <h3 className="font-semibold text-white">
                         A reliable ECG checklist
@@ -797,8 +832,9 @@ export default function ClinicalPage() {
               <Panel>
                 <div className="mb-5 flex items-center gap-3">
                   <div className="rounded-xl bg-cyan-300/10 p-3">
-                    <Waves className="text-cyan-200" size={22} />
+                    <Waves size={22} className="text-cyan-200" />
                   </div>
+
                   <div>
                     <h3 className="text-lg font-semibold text-white">
                       Your learning pathway
@@ -818,13 +854,16 @@ export default function ClinicalPage() {
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-300/10 text-sm font-semibold text-cyan-200">
                         {lesson.number}
                       </div>
+
                       <div>
                         <h4 className="font-medium text-white">
                           {lesson.title}
                         </h4>
+
                         <p className="mt-1 text-sm leading-6 text-slate-400">
                           {lesson.description}
                         </p>
+
                         <span className="mt-2 inline-block text-xs text-cyan-200/80">
                           {lesson.tag}
                         </span>
@@ -877,6 +916,7 @@ export default function ClinicalPage() {
                     teaching scenario.
                   </p>
                 </div>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -912,6 +952,7 @@ export default function ClinicalPage() {
                   >
                     Find a teaching case
                   </label>
+
                   <input
                     id="case-search"
                     type="search"
@@ -950,6 +991,7 @@ export default function ClinicalPage() {
                           >
                             {clinicalCase.modality}
                           </span>
+
                           <span className="text-[10px] text-slate-500">
                             {clinicalCase.level}
                           </span>
@@ -958,6 +1000,7 @@ export default function ClinicalPage() {
                         <h3 className="font-medium text-white">
                           {clinicalCase.title}
                         </h3>
+
                         <p className="mt-1 text-sm leading-5 text-slate-400">
                           {clinicalCase.description}
                         </p>
@@ -984,20 +1027,24 @@ export default function ClinicalPage() {
                             <span className="rounded-full bg-white/5 px-2 py-1 text-xs text-slate-300">
                               {selectedCase.modality}
                             </span>
+
                             <span className="rounded-full bg-white/5 px-2 py-1 text-xs text-slate-300">
                               {selectedCase.category}
                             </span>
                           </div>
+
                           <h3 className="text-xl font-semibold text-white">
                             {selectedCase.title}
                           </h3>
+
                           <p className="mt-2 text-sm leading-6 text-slate-400">
                             {selectedCase.description}
                           </p>
                         </div>
+
                         <Stethoscope
-                          className="shrink-0 text-cyan-200"
                           size={24}
+                          className="shrink-0 text-cyan-200"
                         />
                       </div>
 
@@ -1005,6 +1052,7 @@ export default function ClinicalPage() {
                         <h4 className="mb-3 text-sm font-semibold text-white">
                           Step 1 — Describe your observations
                         </h4>
+
                         <ul className="space-y-3">
                           {selectedCase.findings.map((finding) => (
                             <li
@@ -1039,6 +1087,7 @@ export default function ClinicalPage() {
                             <CheckCircle2 size={18} />
                             Teaching notes
                           </h4>
+
                           <ul className="space-y-3">
                             {selectedCase.teachingPoints.map((point) => (
                               <li
@@ -1049,6 +1098,7 @@ export default function ClinicalPage() {
                               </li>
                             ))}
                           </ul>
+
                           <p className="mt-4 border-t border-white/10 pt-4 text-xs leading-5 text-slate-400">
                             {selectedCase.reminder}
                           </p>
@@ -1056,18 +1106,18 @@ export default function ClinicalPage() {
                       )}
                     </Panel>
 
+                    {/* Local image and PDF review */}
                     <Panel>
                       <div className="mb-4 flex items-start gap-3">
                         <div className="rounded-xl bg-violet-300/10 p-3">
-                          <Upload
-                            size={20}
-                            className="text-violet-200"
-                          />
+                          <Upload size={20} className="text-violet-200" />
                         </div>
+
                         <div>
                           <h3 className="font-semibold text-white">
                             Local image review
                           </h3>
+
                           <p className="mt-1 text-sm leading-6 text-slate-400">
                             Select an image or PDF from your device to preview
                             it in this browser.
@@ -1083,13 +1133,17 @@ export default function ClinicalPage() {
                           size={28}
                           className="mb-3 text-cyan-200"
                         />
+
                         <span className="text-sm font-medium text-white">
                           Choose a clinical teaching file
                         </span>
+
                         <span className="mt-2 text-xs leading-5 text-slate-500">
                           JPG, PNG, WebP, or PDF · Maximum 10 MB
                         </span>
+
                         <input
+                          ref={fileInputRef}
                           id="clinical-file"
                           type="file"
                           accept="image/jpeg,image/png,image/webp,application/pdf"
@@ -1115,15 +1169,18 @@ export default function ClinicalPage() {
                                 size={19}
                                 className="mt-1 shrink-0 text-cyan-200"
                               />
+
                               <div className="min-w-0">
                                 <p className="break-all text-sm font-medium text-white">
                                   {selectedFile.name}
                                 </p>
+
                                 <p className="mt-1 text-xs text-slate-500">
                                   {(selectedFile.size / 1024).toFixed(1)} KB
                                 </p>
                               </div>
                             </div>
+
                             <button
                               type="button"
                               onClick={clearFile}
@@ -1134,13 +1191,14 @@ export default function ClinicalPage() {
                             </button>
                           </div>
 
+                          {/* Image preview: this is a temporary local browser URL. */}
                           {previewUrl && (
                             <div className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-black/20">
-                              {/* A native image element is used for local previews. */}
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={previewUrl}
                                 alt="Local preview of the selected teaching file"
-                                className="max-h-[420px] w-full object-contain"
+                                className="max-h-105 w-full object-contain"
                               />
                             </div>
                           )}
@@ -1171,7 +1229,7 @@ export default function ClinicalPage() {
                               This prototype does not analyse the selected
                               image, extract clinical measurements, or produce
                               an interpretation. Use de-identified teaching
-                              material only. Do not upload identifiable patient
+                              material only. Do not select identifiable patient
                               information.
                             </div>
                           )}
@@ -1183,6 +1241,7 @@ export default function ClinicalPage() {
                           size={19}
                           className="mt-0.5 shrink-0 text-amber-200"
                         />
+
                         <p className="text-xs leading-5 text-slate-300">
                           Privacy note: the selected file is previewed locally
                           in your browser and is not sent to a server by this
@@ -1198,6 +1257,7 @@ export default function ClinicalPage() {
                     <h3 className="font-semibold text-white">
                       Choose a teaching case
                     </h3>
+
                     <p className="mt-2 text-sm leading-6 text-slate-400">
                       Select a case from the list to see its learning prompts.
                     </p>
@@ -1225,16 +1285,15 @@ export default function ClinicalPage() {
               >
                 Experiment Hub
               </Link>
+
               <Link
                 href="/cardiovascular"
                 className="transition hover:text-white"
               >
                 Cardiovascular Lab
               </Link>
-              <Link
-                href="/"
-                className="transition hover:text-white"
-              >
+
+              <Link href="/" className="transition hover:text-white">
                 Dashboard
               </Link>
             </div>
