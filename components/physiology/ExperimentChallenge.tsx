@@ -44,11 +44,14 @@ function subscribeToProgress(callback: () => void) {
 
   return () => {
     window.removeEventListener("storage", callback);
-    window.removeEventListener("physiolab-progress-updated", callback);
+    window.removeEventListener(
+      "physiolab-progress-updated",
+      callback,
+    );
   };
 }
 
-function getSavedCompletion(experimentId?: string) {
+function getSavedCompletion(experimentId?: string): boolean {
   if (typeof window === "undefined" || !experimentId) {
     return false;
   }
@@ -71,11 +74,16 @@ function getSavedCompletion(experimentId?: string) {
     }
 
     return (
-      (progress as Record<string, unknown>)[experimentId] === "completed"
+      (progress as Record<string, unknown>)[experimentId] ===
+      "completed"
     );
   } catch {
     return false;
   }
+}
+
+function getServerCompletionSnapshot() {
+  return false;
 }
 
 // ------------------------------------------------------
@@ -99,23 +107,17 @@ export function ExperimentChallenge({
   const [completedThisSession, setCompletedThisSession] =
     useState(false);
 
-  const getCompletionSnapshot = () =>
-    getSavedCompletion(experimentId);
-
-  const getServerCompletionSnapshot = () => false;
-
   const savedCompletion = useSyncExternalStore(
     subscribeToProgress,
-    getCompletionSnapshot,
+    () => getSavedCompletion(experimentId),
     getServerCompletionSnapshot,
   );
 
   const completed = savedCompletion || completedThisSession;
-
   const isCorrect = selectedAnswer === correctAnswer;
 
   // ----------------------------------------------------
-  // Answer submission
+  // Answer submission and automatic completion
   // ----------------------------------------------------
 
   function handleSubmit() {
@@ -124,19 +126,27 @@ export function ExperimentChallenge({
     }
 
     setSubmitted(true);
-  }
 
-  // ----------------------------------------------------
-  // Complete experiment
-  // ----------------------------------------------------
-
-  function handleComplete() {
-    if (!isCorrect || !experimentId || completed) {
+    // Do not change progress if this challenge has no registered ID.
+    if (!experimentId) {
       return;
     }
 
-    updateExperimentStatus(experimentId, "completed");
-    setCompletedThisSession(true);
+    // A correct answer completes the experiment immediately.
+    if (selectedAnswer === correctAnswer) {
+      if (!completed) {
+        updateExperimentStatus(experimentId, "completed");
+        setCompletedThisSession(true);
+      }
+
+      return;
+    }
+
+    // An incorrect answer starts or continues the experiment.
+    // Never downgrade an experiment that was already completed.
+    if (!completed) {
+      updateExperimentStatus(experimentId, "in-progress");
+    }
   }
 
   // ----------------------------------------------------
@@ -147,8 +157,7 @@ export function ExperimentChallenge({
     setSelectedAnswer(null);
     setSubmitted(false);
 
-    // Keep completed progress intact.
-    // Retrying a challenge must not erase completion.
+    // Saved completion is deliberately preserved.
   }
 
   // ----------------------------------------------------
@@ -178,7 +187,7 @@ export function ExperimentChallenge({
       {completed && (
         <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-sm font-medium text-emerald-300">
           <CheckCircle2 size={18} />
-          This experiment is already completed.
+          This experiment is completed.
         </div>
       )}
 
@@ -304,24 +313,11 @@ export function ExperimentChallenge({
             </div>
           )}
 
-          {/* Completion action */}
+          {/* Completion confirmation */}
           {isCorrect && experimentId && (
-            <div className="mt-5">
-              {completed ? (
-                <p className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-300">
-                  <CheckCircle2 size={18} />
-                  Experiment completed
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleComplete}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
-                >
-                  <CheckCircle2 size={17} />
-                  Complete experiment
-                </button>
-              )}
+            <div className="mt-5 flex items-center gap-2 text-sm font-semibold text-emerald-300">
+              <CheckCircle2 size={18} />
+              Experiment completed and progress saved.
             </div>
           )}
 

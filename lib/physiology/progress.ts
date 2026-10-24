@@ -1,29 +1,69 @@
 import type { ExperimentStatus } from "./experiment";
+import { experiments } from "./experiments";
 
 const STORAGE_KEY = "physiolab-progress";
 
 export type ExperimentProgress = Record<string, ExperimentStatus>;
 
-const DEFAULT_PROGRESS: ExperimentProgress = {};
+const VALID_STATUSES = new Set<ExperimentStatus>([
+  "not-started",
+  "in-progress",
+  "completed",
+]);
+
+const VALID_EXPERIMENT_IDS = new Set(
+  experiments.map((experiment) => experiment.id),
+);
+
+const EMPTY_PROGRESS: ExperimentProgress = {};
+
+function isExperimentStatus(value: unknown): value is ExperimentStatus {
+  return (
+    typeof value === "string" &&
+    VALID_STATUSES.has(value as ExperimentStatus)
+  );
+}
+
+function normalizeProgress(value: unknown): ExperimentProgress {
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    Array.isArray(value)
+  ) {
+    return {};
+  }
+
+  const normalized: ExperimentProgress = {};
+
+  for (const [experimentId, status] of Object.entries(value)) {
+    if (
+      VALID_EXPERIMENT_IDS.has(experimentId) &&
+      isExperimentStatus(status)
+    ) {
+      normalized[experimentId] = status;
+    }
+  }
+
+  return normalized;
+}
 
 export function getProgress(): ExperimentProgress {
   if (typeof window === "undefined") {
-    return DEFAULT_PROGRESS;
+    return EMPTY_PROGRESS;
   }
 
   try {
-    const savedProgress = localStorage.getItem(STORAGE_KEY);
+    const savedProgress = window.localStorage.getItem(STORAGE_KEY);
 
     if (!savedProgress) {
-      return DEFAULT_PROGRESS;
+      return {};
     }
 
-    return JSON.parse(savedProgress) as ExperimentProgress;
+    return normalizeProgress(JSON.parse(savedProgress));
   } catch {
-    return DEFAULT_PROGRESS;
+    return {};
   }
 }
-
 
 export function saveProgress(
   progress: ExperimentProgress,
@@ -33,9 +73,11 @@ export function saveProgress(
   }
 
   try {
-    localStorage.setItem(
+    const normalizedProgress = normalizeProgress(progress);
+
+    window.localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify(progress),
+      JSON.stringify(normalizedProgress),
     );
 
     window.dispatchEvent(
@@ -49,12 +91,16 @@ export function saveProgress(
   }
 }
 
-
 export function updateExperimentStatus(
   experimentId: string,
   status: ExperimentStatus,
 ): ExperimentProgress {
   const currentProgress = getProgress();
+
+  // Only registered experiments may update saved progress.
+  if (!VALID_EXPERIMENT_IDS.has(experimentId)) {
+    return currentProgress;
+  }
 
   const updatedProgress: ExperimentProgress = {
     ...currentProgress,
@@ -69,9 +115,11 @@ export function updateExperimentStatus(
 export function getCompletedCount(
   progress: ExperimentProgress,
 ): number {
-  return Object.values(progress).filter(
-    (status) => status === "completed",
-  ).length;
+  return experiments.reduce((count, experiment) => {
+    return count + (
+      progress[experiment.id] === "completed" ? 1 : 0
+    );
+  }, 0);
 }
 
 export function getCompletionPercentage(
