@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -470,7 +469,7 @@ export default function ExperimentsPage() {
                   "border-cyan-400/20 bg-cyan-400/10 text-cyan-300";
 
                 const route =
-                  experimentRoutes[experiment.id] ?? "/experiments";
+                experimentRoutes[experiment.id] ?? `/experiments/${experiment.id}`;
 
                 return (
                   <article
