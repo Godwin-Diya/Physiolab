@@ -12,7 +12,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-import ExperimentChallenge from "@/components/physiology/ExperimentChallenge";
+import { ExperimentChallenge } from "@/components/physiology/ExperimentChallenge";
 import {
   getProgress,
   updateExperimentStatus,
@@ -115,8 +115,17 @@ function calculateResult(
           "The index illustrates the directional effect of ADH on water reabsorption. It is not a measured physiological percentage.",
       };
     }
+    
+      default: {
+      return {
+        display: "Model unavailable",
+        interpretation:
+          "This simulation does not have a configured calculation yet.",
+      };
+    }
   }
 }
+
 
 export default function ExperimentDetailPage() {
   const params = useParams<{ id: string }>();
@@ -161,15 +170,18 @@ export default function ExperimentDetailPage() {
     ? calculateResult(simulation.kind, value)
     : null;
 
+  const currentExperimentId = experiment.id;
+
   function handleSimulationChange(nextValue: number) {
     setSimulationValue(nextValue);
 
     const progress = getProgress();
 
-    if (progress[experiment.id] !== "completed") {
-      updateExperimentStatus(experiment.id, "in-progress");
+    if (progress[currentExperimentId] !== "completed") {
+      updateExperimentStatus(currentExperimentId, "in-progress");
     }
   }
+
 
   return (
     <main className="min-h-screen bg-[#080d18] text-white">
