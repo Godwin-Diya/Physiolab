@@ -20,6 +20,7 @@ import {
 import { experiments } from "@/lib/physiology/experiments";
 import type { SimulationKind } from "@/lib/physiology/experiment";
 import { SimulationVisual } from "@/components/physiology/SimulationVisual";
+import { ModelGuide } from "@/components/physiology/ModelGuide";
 
 interface SimulationResult {
   display: string;
