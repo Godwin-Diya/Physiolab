@@ -166,6 +166,17 @@ export default function ExperimentDetailPage() {
     );
   }
 
+  const currentExperimentIndex = experiments.findIndex(
+  (item) => item.id === experiment.id,
+);
+
+  const nextExperiment =
+  experiments.find(
+    (item, index) =>
+      index > currentExperimentIndex &&
+      item.system === experiment.system,
+  ) ?? experiments[currentExperimentIndex + 1];
+
   const simulation = experiment.simulation;
   const value = simulationValue ?? simulation?.initialValue ?? 0;
   const result = simulation
@@ -320,6 +331,8 @@ export default function ExperimentDetailPage() {
               clinical calculators and should not be used to make
               diagnostic or treatment decisions.
             </p>
+
+            <ModelGuide kind={simulation.kind} />
           </section>
         )}
 

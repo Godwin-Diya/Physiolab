@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 
 import {
   CheckCircle2,
   Lightbulb,
   RotateCcw,
   XCircle,
+  Trophy,
+  ArrowRight,
+  BookOpen,
 } from "lucide-react";
 
 import { updateExperimentStatus } from "@/lib/physiology/progress";
@@ -28,6 +32,10 @@ type ExperimentChallengeProps = {
   explanation: string;
   observation?: string;
   experimentId?: string;
+  experimentTitle?: string;
+  learningObjective?: string;
+  nextExperimentTitle?: string;
+  nextExperimentHref?: string;
 };
 
 // ------------------------------------------------------
@@ -98,6 +106,10 @@ export function ExperimentChallenge({
   explanation,
   observation,
   experimentId,
+  experimentTitle = "Physiology experiment",
+  learningObjective,
+  nextExperimentTitle,
+  nextExperimentHref,
 }: ExperimentChallengeProps) {
   const [selectedAnswer, setSelectedAnswer] =
     useState<string | null>(null);
@@ -127,12 +139,10 @@ export function ExperimentChallenge({
 
     setSubmitted(true);
 
-    // Do not change progress if this challenge has no registered ID.
     if (!experimentId) {
       return;
     }
 
-    // A correct answer completes the experiment immediately.
     if (selectedAnswer === correctAnswer) {
       if (!completed) {
         updateExperimentStatus(experimentId, "completed");
@@ -142,8 +152,6 @@ export function ExperimentChallenge({
       return;
     }
 
-    // An incorrect answer starts or continues the experiment.
-    // Never downgrade an experiment that was already completed.
     if (!completed) {
       updateExperimentStatus(experimentId, "in-progress");
     }
@@ -156,8 +164,6 @@ export function ExperimentChallenge({
   function handleReset() {
     setSelectedAnswer(null);
     setSubmitted(false);
-
-    // Saved completion is deliberately preserved.
   }
 
   // ----------------------------------------------------
@@ -166,7 +172,9 @@ export function ExperimentChallenge({
 
   return (
     <section className="rounded-2xl border border-violet-400/15 bg-violet-400/3 p-6 sm:p-7">
+
       {/* Header */}
+
       <div className="flex items-start gap-4">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-400/10 text-violet-300">
           <Lightbulb size={21} />
@@ -184,6 +192,7 @@ export function ExperimentChallenge({
       </div>
 
       {/* Saved completion indicator */}
+
       {completed && (
         <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-3 text-sm font-medium text-emerald-300">
           <CheckCircle2 size={18} />
@@ -192,6 +201,7 @@ export function ExperimentChallenge({
       )}
 
       {/* Question */}
+
       <div className="mt-6">
         <p className="text-base leading-7 text-slate-200">
           {question}
@@ -205,6 +215,7 @@ export function ExperimentChallenge({
       </div>
 
       {/* Answer options */}
+
       <div className="mt-6 grid gap-3">
         {options.map((option) => {
           const selected = selectedAnswer === option.value;
@@ -249,6 +260,7 @@ export function ExperimentChallenge({
       </div>
 
       {/* Submit answer */}
+
       {!submitted && (
         <button
           type="button"
@@ -261,6 +273,7 @@ export function ExperimentChallenge({
       )}
 
       {/* Answer result */}
+
       {submitted && (
         <div
           aria-live="polite"
@@ -301,6 +314,7 @@ export function ExperimentChallenge({
           </div>
 
           {/* Observation */}
+
           {observation && (
             <div className="mt-4 rounded-xl border border-white/10 bg-white/2.5 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -314,6 +328,7 @@ export function ExperimentChallenge({
           )}
 
           {/* Completion confirmation */}
+
           {isCorrect && experimentId && (
             <div className="mt-5 flex items-center gap-2 text-sm font-semibold text-emerald-300">
               <CheckCircle2 size={18} />
@@ -322,6 +337,7 @@ export function ExperimentChallenge({
           )}
 
           {/* Retry */}
+
           <button
             type="button"
             onClick={handleReset}
@@ -330,6 +346,92 @@ export function ExperimentChallenge({
             <RotateCcw size={15} />
             Try again
           </button>
+        </div>
+      )}
+
+      {/* Completion learning summary */}
+
+      {submitted && isCorrect && (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-emerald-400/20 bg-linear-to-br from-emerald-400/10 via-[#101827] to-cyan-400/5">
+
+          <div className="border-b border-white/5 p-5 sm:p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-400/20 bg-amber-400/10 text-amber-300">
+                <Trophy size={24} />
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                  Learning milestone
+                </p>
+
+                <h3 className="mt-1 text-xl font-bold text-white">
+                  Experiment completed!
+                </h3>
+              </div>
+            </div>
+
+            <p className="mt-4 text-sm leading-6 text-slate-300">
+              You have successfully completed{" "}
+              <span className="font-semibold text-white">
+                {experimentTitle}
+              </span>
+              . Your progress has been recorded in Physiolab.
+            </p>
+          </div>
+
+          {learningObjective && (
+            <div className="p-5 sm:p-6">
+              <div className="flex items-center gap-2 text-cyan-300">
+                <BookOpen size={18} />
+                <h4 className="text-sm font-semibold">
+                  What you have learned
+                </h4>
+              </div>
+
+              <p className="mt-3 text-sm leading-6 text-slate-300">
+                {learningObjective}
+              </p>
+            </div>
+          )}
+
+          {nextExperimentTitle && nextExperimentHref && (
+            <div className="border-t border-white/5 p-5 sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                Continue your learning journey
+              </p>
+
+              <Link
+                href={nextExperimentHref}
+                className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-cyan-400/20 bg-cyan-400/5 p-4 transition hover:border-cyan-400/40 hover:bg-cyan-400/10"
+              >
+                <div>
+                  <p className="text-xs text-cyan-300">
+                    Recommended next experiment
+                  </p>
+
+                  <p className="mt-1 font-semibold text-white">
+                    {nextExperimentTitle}
+                  </p>
+                </div>
+
+                <ArrowRight
+                  size={20}
+                  className="shrink-0 text-cyan-300"
+                />
+              </Link>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-3 border-t border-white/5 p-5 sm:p-6">
+            <Link
+              href="/experiments"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
+            >
+              Explore experiments
+              <ArrowRight size={16} />
+            </Link>
+          </div>
         </div>
       )}
     </section>
