@@ -360,6 +360,14 @@ export default function ExperimentDetailPage() {
               correctAnswer={experiment.challenge.correctAnswer}
               explanation={experiment.challenge.explanation}
               observation={experiment.challenge.observation}
+              experimentTitle={experiment.title}
+              learningObjective={experiment.learningObjective}
+              nextExperimentTitle={nextExperiment?.title}
+              nextExperimentHref={
+              nextExperiment
+              ? `/experiments/${nextExperiment.id}`
+              : undefined
+            }
             />
           ) : (
             <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5 text-sm leading-6 text-amber-200">
