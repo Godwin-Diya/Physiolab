@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
-
+import { usePathname } from "next/navigation";
 import {
   Activity,
   ArrowRight,
@@ -24,6 +23,7 @@ import {
   Trophy,
   Wind,
   X,
+  ChartNoAxesCombined,
 } from "lucide-react";
 
 import { experiments } from "@/lib/physiology/experiments";
@@ -86,6 +86,11 @@ const navigation = [
   { name: "Simulations", icon: Activity, href: "/cardiovascular" },
   { name: "Experiments", icon: FlaskConical, href: "/experiments" },
   {
+    name: "Progress",
+    icon: ChartNoAxesCombined,
+    href: "/progress",
+  },
+  {
     name: "Clinical Learning Centre",
     icon: Stethoscope,
     href: "/clinical",
@@ -123,6 +128,7 @@ function getServerCompletedExperimentsSnapshot() {
 
 export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
 
   const completedExperiments = useSyncExternalStore(
     subscribeToProgress,
@@ -198,7 +204,7 @@ export default function HomePage() {
           <div className="space-y-1">
             {navigation.map((item, index) => {
               const Icon = item.icon;
-              const active = index === 0;
+              const active = pathname === item.href;
 
               return (
                 <Link
@@ -381,7 +387,7 @@ export default function HomePage() {
               </div>
 
               <Link
-                href="/experiments"
+                href="/progress"
                 className="hidden items-center gap-1 text-sm text-slate-400 hover:text-white sm:flex"
               >
                 View progress
