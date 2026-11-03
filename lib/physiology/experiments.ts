@@ -12,7 +12,6 @@ export const experiments: Experiment[] = [
     difficulty: "beginner",
     status: "in-progress",
   },
-
   {
     id: "baroreceptor-reflex",
     title: "Baroreceptor Reflex Lab",
@@ -24,7 +23,6 @@ export const experiments: Experiment[] = [
     difficulty: "intermediate",
     status: "in-progress",
   },
-
   {
     id: "gas-exchange",
     title: "Gas Exchange Lab",

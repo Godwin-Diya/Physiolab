@@ -17,7 +17,9 @@ const VALID_EXPERIMENT_IDS = new Set(
 
 const EMPTY_PROGRESS: ExperimentProgress = {};
 
-function isExperimentStatus(value: unknown): value is ExperimentStatus {
+function isExperimentStatus(
+  value: unknown,
+): value is ExperimentStatus {
   return (
     typeof value === "string" &&
     VALID_STATUSES.has(value as ExperimentStatus)
@@ -98,7 +100,10 @@ export function updateExperimentStatus(
   const currentProgress = getProgress();
 
   // Only registered experiments may update saved progress.
-  if (!VALID_EXPERIMENT_IDS.has(experimentId)) {
+  if (
+    !VALID_EXPERIMENT_IDS.has(experimentId) ||
+    !VALID_STATUSES.has(status)
+  ) {
     return currentProgress;
   }
 

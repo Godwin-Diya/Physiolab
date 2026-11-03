@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
+import { useState, useSyncExternalStore } from "react";
+
 import {
   Activity,
   ArrowRight,
   Brain,
+  ChartNoAxesCombined,
   ChevronRight,
   FlaskConical,
   HeartPulse,
@@ -23,7 +25,6 @@ import {
   Trophy,
   Wind,
   X,
-  ChartNoAxesCombined,
 } from "lucide-react";
 
 import { experiments } from "@/lib/physiology/experiments";
@@ -32,6 +33,10 @@ import {
   getProgress,
   getCompletedCount,
 } from "@/lib/physiology/progress";
+
+// ------------------------------------------------------
+// PHYSIOLOGY SYSTEMS
+// ------------------------------------------------------
 
 const systems = [
   {
@@ -42,7 +47,6 @@ const systems = [
     color: "text-rose-400",
     background: "bg-rose-500/10",
     border: "border-rose-500/20",
-    progress: 82,
     href: "/cardiovascular",
   },
   {
@@ -53,7 +57,6 @@ const systems = [
     color: "text-cyan-400",
     background: "bg-cyan-500/10",
     border: "border-cyan-500/20",
-    progress: 64,
     href: "/respiratory",
   },
   {
@@ -64,7 +67,6 @@ const systems = [
     color: "text-violet-400",
     background: "bg-violet-500/10",
     border: "border-violet-500/20",
-    progress: 48,
     href: "/baroreflex",
   },
   {
@@ -75,16 +77,35 @@ const systems = [
     color: "text-emerald-400",
     background: "bg-emerald-500/10",
     border: "border-emerald-500/20",
-    progress: 35,
     href: "/experiments",
   },
 ];
 
+// ------------------------------------------------------
+// SIDEBAR NAVIGATION
+// ------------------------------------------------------
+
 const navigation = [
-  { name: "Dashboard", icon: Home, href: "/" },
-  { name: "Systems", icon: Layers3, href: "/cardiovascular" },
-  { name: "Simulations", icon: Activity, href: "/cardiovascular" },
-  { name: "Experiments", icon: FlaskConical, href: "/experiments" },
+  {
+    name: "Dashboard",
+    icon: Home,
+    href: "/",
+  },
+  {
+    name: "Systems",
+    icon: Layers3,
+    href: "/cardiovascular",
+  },
+  {
+    name: "Simulations",
+    icon: Activity,
+    href: "/cardiovascular",
+  },
+  {
+    name: "Experiments",
+    icon: FlaskConical,
+    href: "/experiments",
+  },
   {
     name: "Progress",
     icon: ChartNoAxesCombined,
@@ -95,20 +116,32 @@ const navigation = [
     icon: Stethoscope,
     href: "/clinical",
   },
-  { name: "Quiz", icon: Trophy, href: "/experiments" },
+  {
+    name: "Quiz",
+    icon: Trophy,
+    href: "/experiments",
+  },
 ];
 
-// Subscribe to progress changes in this tab and in other tabs.
+// ------------------------------------------------------
+// PROGRESS SUBSCRIPTION
+// ------------------------------------------------------
+
 function subscribeToProgress(callback: () => void) {
   if (typeof window === "undefined") {
     return () => {};
   }
 
   window.addEventListener("storage", callback);
-  window.addEventListener("physiolab-progress-updated", callback);
+
+  window.addEventListener(
+    "physiolab-progress-updated",
+    callback,
+  );
 
   return () => {
     window.removeEventListener("storage", callback);
+
     window.removeEventListener(
       "physiolab-progress-updated",
       callback,
@@ -116,25 +149,88 @@ function subscribeToProgress(callback: () => void) {
   };
 }
 
-// Read the number of completed experiments from saved progress.
+// ------------------------------------------------------
+// OVERALL EXPERIMENT PROGRESS
+// ------------------------------------------------------
+
 function getCompletedExperimentsSnapshot() {
   return getCompletedCount(getProgress());
 }
 
-// Use the same initial snapshot during server rendering.
 function getServerCompletedExperimentsSnapshot() {
   return 0;
 }
 
+// ------------------------------------------------------
+// SYSTEM-SPECIFIC PROGRESS
+// ------------------------------------------------------
+
+function getSystemProgressSnapshot() {
+  const progress = getProgress();
+
+  const systemProgress = systems.map((system) => {
+    const systemExperiments = experiments.filter(
+      (experiment) => experiment.system === system.name,
+    );
+
+    const completed = systemExperiments.filter(
+      (experiment) =>
+        progress[experiment.id] === "completed",
+    ).length;
+
+    return {
+      name: system.name,
+      completed,
+      total: systemExperiments.length,
+    };
+  });
+
+  // JSON provides a stable primitive snapshot.
+  return JSON.stringify(systemProgress);
+}
+
+function getServerSystemProgressSnapshot() {
+  return JSON.stringify(
+    systems.map((system) => ({
+      name: system.name,
+      completed: 0,
+      total: experiments.filter(
+        (experiment) => experiment.system === system.name,
+      ).length,
+    })),
+  );
+}
+
+// ------------------------------------------------------
+// MAIN DASHBOARD
+// ------------------------------------------------------
+
 export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const pathname = usePathname();
 
+  // Overall experiment completion.
   const completedExperiments = useSyncExternalStore(
     subscribeToProgress,
     getCompletedExperimentsSnapshot,
     getServerCompletedExperimentsSnapshot,
   );
+
+  // System-specific experiment completion.
+  const systemProgressSnapshot = useSyncExternalStore(
+    subscribeToProgress,
+    getSystemProgressSnapshot,
+    getServerSystemProgressSnapshot,
+  );
+
+  const systemProgress = JSON.parse(
+    systemProgressSnapshot,
+  ) as {
+    name: string;
+    completed: number;
+    total: number;
+  }[];
 
   const totalExperiments = experiments.length;
 
@@ -145,9 +241,15 @@ export default function HomePage() {
         )
       : 0;
 
+  // ----------------------------------------------------
+  // DASHBOARD UI
+  // ----------------------------------------------------
+
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
-      {/* Mobile overlay */}
+
+      {/* MOBILE NAVIGATION OVERLAY */}
+
       {sidebarOpen && (
         <button
           type="button"
@@ -157,14 +259,22 @@ export default function HomePage() {
         />
       )}
 
-      {/* Sidebar */}
+      {/* ------------------------------------------------
+          SIDEBAR
+      ------------------------------------------------ */}
+
       <aside
         className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-white/10 bg-[#091525] transition-transform duration-300 lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          sidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full"
         }`}
       >
-        {/* Branding */}
+
+        {/* BRANDING */}
+
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-6">
+
           <Link
             href="/"
             onClick={() => setSidebarOpen(false)}
@@ -193,17 +303,22 @@ export default function HomePage() {
           >
             <X size={20} />
           </button>
+
         </div>
 
-        {/* Navigation */}
+        {/* NAVIGATION */}
+
         <nav className="flex-1 overflow-y-auto px-4 py-8">
+
           <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
             Explore
           </p>
 
           <div className="space-y-1">
-            {navigation.map((item, index) => {
+
+            {navigation.map((item) => {
               const Icon = item.icon;
+
               const active = pathname === item.href;
 
               return (
@@ -228,9 +343,11 @@ export default function HomePage() {
                 </Link>
               );
             })}
+
           </div>
 
-          {/* Workspace */}
+          {/* WORKSPACE */}
+
           <p className="mb-3 mt-10 px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
             Workspace
           </p>
@@ -240,12 +357,16 @@ export default function HomePage() {
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
           >
             <Settings size={18} />
+
             <span>Settings</span>
           </button>
+
         </nav>
 
-        {/* Learning streak */}
+        {/* LEARNING STREAK */}
+
         <div className="m-4 rounded-2xl border border-cyan-400/10 bg-cyan-400/5 p-4">
+
           <div className="mb-3 flex items-center gap-2">
             <Sparkles size={16} className="text-cyan-400" />
 
@@ -255,8 +376,11 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-end justify-between">
+
             <div>
-              <p className="text-2xl font-bold">7 days</p>
+              <p className="text-2xl font-bold">
+                7 days
+              </p>
 
               <p className="mt-1 text-xs text-slate-500">
                 Keep exploring physiology.
@@ -266,14 +390,22 @@ export default function HomePage() {
             <div className="text-2xl" aria-hidden="true">
               🔥
             </div>
+
           </div>
         </div>
+
       </aside>
 
-      {/* Main content */}
+      {/* ------------------------------------------------
+          MAIN CONTENT
+      ------------------------------------------------ */}
+
       <div className="lg:pl-72">
-        {/* Top bar */}
+
+        {/* TOP BAR */}
+
         <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-white/10 bg-[#07111f]/90 px-5 backdrop-blur-xl sm:px-8">
+
           <button
             type="button"
             aria-label="Open navigation"
@@ -283,8 +415,10 @@ export default function HomePage() {
             <Menu size={20} />
           </button>
 
-          {/* Search */}
+          {/* SEARCH */}
+
           <div className="relative hidden max-w-md flex-1 lg:block">
+
             <Search
               size={18}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
@@ -296,10 +430,13 @@ export default function HomePage() {
               aria-label="Search physiology"
               className="h-11 w-full rounded-xl border border-white/10 bg-white/3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/40"
             />
+
           </div>
 
-          {/* User profile */}
+          {/* USER PROFILE */}
+
           <div className="ml-auto flex items-center gap-3">
+
             <button
               type="button"
               aria-label="Display settings"
@@ -309,6 +446,7 @@ export default function HomePage() {
             </button>
 
             <div className="flex items-center gap-3 border-l border-white/10 pl-3">
+
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-medium">
                   Physio Explorer
@@ -322,18 +460,26 @@ export default function HomePage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-cyan-300 to-blue-500 font-bold text-slate-950">
                 P
               </div>
+
             </div>
           </div>
+
         </header>
 
         <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
-          {/* Hero */}
+
+          {/* ------------------------------------------------
+              HERO SECTION
+          ------------------------------------------------ */}
+
           <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-[#0d2033] via-[#0a1828] to-[#07111f] p-7 sm:p-10">
+
             <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
 
             <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
 
             <div className="relative max-w-3xl">
+
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-xs font-medium text-cyan-300">
                 <Sparkles size={14} />
                 Interactive Human Physiology
@@ -354,6 +500,7 @@ export default function HomePage() {
               </p>
 
               <div className="mt-7 flex flex-wrap gap-3">
+
                 <Link
                   href="/experiments"
                   className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
@@ -369,13 +516,20 @@ export default function HomePage() {
                   View simulations
                   <ArrowRight size={16} />
                 </Link>
+
               </div>
             </div>
+
           </section>
 
-          {/* Continue learning */}
+          {/* ------------------------------------------------
+              CONTINUE LEARNING
+          ------------------------------------------------ */}
+
           <section className="mt-10">
+
             <div className="mb-5 flex items-end justify-between">
+
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
                   Continue learning
@@ -393,12 +547,17 @@ export default function HomePage() {
                 View progress
                 <ChevronRight size={16} />
               </Link>
+
             </div>
 
             <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-              {/* Progress card */}
+
+              {/* PROGRESS CARD */}
+
               <div className="rounded-2xl border border-white/10 bg-white/2.5 p-6">
+
                 <div className="flex items-start justify-between">
+
                   <div>
                     <p className="text-sm text-slate-500">
                       Current module
@@ -412,11 +571,15 @@ export default function HomePage() {
                   <div className="rounded-xl bg-rose-500/10 p-3 text-rose-400">
                     <HeartPulse size={22} />
                   </div>
+
                 </div>
 
-                {/* Progress bars */}
+                {/* MODULE PROGRESS */}
+
                 <div className="mt-7">
+
                   <div className="mb-2 flex justify-between text-xs">
+
                     <span className="text-slate-500">
                       Progress
                     </span>
@@ -424,15 +587,19 @@ export default function HomePage() {
                     <span className="font-medium text-cyan-300">
                       82%
                     </span>
+
                   </div>
 
                   <div className="h-2 overflow-hidden rounded-full bg-slate-800">
                     <div className="h-full w-[82%] rounded-full bg-cyan-400" />
                   </div>
 
-                  {/* Overall experiment completion */}
+                  {/* OVERALL EXPERIMENT COMPLETION */}
+
                   <div className="mt-6">
+
                     <div className="mb-2 flex justify-between text-xs">
+
                       <span className="text-slate-500">
                         Experiment completion
                       </span>
@@ -440,6 +607,7 @@ export default function HomePage() {
                       <span className="font-medium text-emerald-300">
                         {experimentCompletionPercentage}%
                       </span>
+
                     </div>
 
                     <div
@@ -457,18 +625,29 @@ export default function HomePage() {
                         }}
                       />
                     </div>
+
                   </div>
+
                 </div>
 
-                {/* Learning statistics */}
+                {/* LEARNING STATISTICS */}
+
                 <div className="mt-7 flex flex-wrap items-center gap-6 text-sm">
+
                   <div>
-                    <p className="text-slate-500">Lessons</p>
-                    <p className="mt-1 font-semibold">14 / 17</p>
+                    <p className="text-slate-500">
+                      Lessons
+                    </p>
+
+                    <p className="mt-1 font-semibold">
+                      14 / 17
+                    </p>
                   </div>
 
                   <div>
-                    <p className="text-slate-500">Experiments</p>
+                    <p className="text-slate-500">
+                      Experiments
+                    </p>
 
                     <p className="mt-1 font-semibold">
                       {completedExperiments} / {totalExperiments}
@@ -480,9 +659,15 @@ export default function HomePage() {
                   </div>
 
                   <div>
-                    <p className="text-slate-500">Mastery</p>
-                    <p className="mt-1 font-semibold">Advanced</p>
+                    <p className="text-slate-500">
+                      Mastery
+                    </p>
+
+                    <p className="mt-1 font-semibold">
+                      Advanced
+                    </p>
                   </div>
+
                 </div>
 
                 <Link
@@ -492,11 +677,15 @@ export default function HomePage() {
                   Continue module
                   <ArrowRight size={16} />
                 </Link>
+
               </div>
 
-              {/* Daily challenge */}
+              {/* DAILY CHALLENGE */}
+
               <div className="rounded-2xl border border-violet-400/10 bg-violet-400/4 p-6">
+
                 <div className="flex items-center justify-between">
+
                   <div className="rounded-xl bg-violet-400/10 p-3 text-violet-300">
                     <Trophy size={22} />
                   </div>
@@ -504,6 +693,7 @@ export default function HomePage() {
                   <span className="rounded-full bg-violet-400/10 px-3 py-1 text-xs text-violet-300">
                     Daily challenge
                   </span>
+
                 </div>
 
                 <h3 className="mt-6 text-lg font-semibold">
@@ -522,13 +712,21 @@ export default function HomePage() {
                   Take challenge
                   <ArrowRight size={15} />
                 </Link>
+
               </div>
+
             </div>
+
           </section>
 
-          {/* Systems */}
+          {/* ------------------------------------------------
+              PHYSIOLOGY SYSTEMS
+          ------------------------------------------------ */}
+
           <section className="mt-12">
+
             <div className="mb-5 flex items-end justify-between">
+
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
                   Explore
@@ -546,22 +744,45 @@ export default function HomePage() {
                 View all
                 <ChevronRight size={16} />
               </Link>
+
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+
               {systems.map((system) => {
                 const Icon = system.icon;
+
+                const currentProgress = systemProgress.find(
+                  (item) => item.name === system.name,
+                );
+
+                const hasExperiments =
+                  currentProgress !== undefined &&
+                  currentProgress.total > 0;
+
+                const progressPercentage = hasExperiments
+                  ? Math.round(
+                      (currentProgress.completed /
+                        currentProgress.total) *
+                        100,
+                    )
+                  : 0;
 
                 return (
                   <article
                     key={system.name}
                     className={`group rounded-2xl border ${system.border} bg-white/2.5 p-5 transition duration-300 hover:-translate-y-1 hover:bg-white/4`}
                   >
+
+                    {/* SYSTEM ICON */}
+
                     <div
                       className={`flex h-11 w-11 items-center justify-center rounded-xl ${system.background} ${system.color}`}
                     >
                       <Icon size={21} />
                     </div>
+
+                    {/* SYSTEM DETAILS */}
 
                     <h3 className="mt-5 font-semibold">
                       {system.name}
@@ -571,29 +792,59 @@ export default function HomePage() {
                       {system.description}
                     </p>
 
+                    {/* DYNAMIC SYSTEM PROGRESS */}
+
                     <div className="mt-5">
+
                       <div className="mb-2 flex justify-between text-xs">
-                        <span className="text-slate-600">
-                          Mastery
+
+                        <span className="text-slate-500">
+                          Experiment completion
                         </span>
 
-                        <span className="text-slate-400">
-                          {system.progress}%
+                        <span className="font-medium text-slate-300">
+                          {hasExperiments
+                            ? `${progressPercentage}%`
+                            : "Not yet available"}
                         </span>
+
                       </div>
 
-                      <div className="h-1.5 overflow-hidden rounded-full bg-slate-800">
-                        <div
-                          className={`h-full rounded-full ${system.color.replace(
-                            "text-",
-                            "bg-",
-                          )}`}
-                          style={{
-                            width: `${system.progress}%`,
-                          }}
-                        />
-                      </div>
+                      {hasExperiments ? (
+                        <>
+                          <div
+                            className="h-1.5 overflow-hidden rounded-full bg-slate-800"
+                            role="progressbar"
+                            aria-label={`${system.name} experiment completion`}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={progressPercentage}
+                          >
+                            <div
+                              className={`h-full rounded-full ${system.color.replace(
+                                "text-",
+                                "bg-",
+                              )} transition-all duration-500`}
+                              style={{
+                                width: `${progressPercentage}%`,
+                              }}
+                            />
+                          </div>
+
+                          <p className="mt-2 text-xs text-slate-500">
+                            {currentProgress.completed} of{" "}
+                            {currentProgress.total} experiments completed
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-xs leading-5 text-slate-500">
+                          Experiments for this system are coming soon.
+                        </p>
+                      )}
+
                     </div>
+
+                    {/* SYSTEM LINK */}
 
                     <Link
                       href={system.href}
@@ -606,15 +857,23 @@ export default function HomePage() {
                         className="transition-transform group-hover:translate-x-1"
                       />
                     </Link>
+
                   </article>
                 );
               })}
+
             </div>
+
           </section>
 
-          {/* Quick lab */}
+          {/* ------------------------------------------------
+              QUICK LAB
+          ------------------------------------------------ */}
+
           <section className="mt-12">
+
             <div className="mb-5">
+
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
                 Quick lab
               </p>
@@ -627,10 +886,13 @@ export default function HomePage() {
                 Move between interactive physiology experiments and
                 clinical learning resources from one place.
               </p>
+
             </div>
 
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-              {/* Cardiac Output Lab */}
+
+              {/* CARDIAC OUTPUT LAB */}
+
               <Link
                 href="/cardiovascular"
                 className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-rose-400/20 hover:bg-rose-400/3"
@@ -653,13 +915,16 @@ export default function HomePage() {
                   Run experiment
                   <ArrowRight size={15} />
                 </span>
+
               </Link>
 
-              {/* Baroreceptor Reflex Lab */}
+              {/* BARORECEPTOR REFLEX LAB */}
+
               <Link
                 href="/baroreflex"
                 className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-cyan-400/30 hover:bg-white/4"
               >
+
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-400">
                   <Activity size={20} />
                 </div>
@@ -680,14 +945,20 @@ export default function HomePage() {
                 <div className="mt-5 text-sm font-medium text-cyan-400">
                   Enter laboratory →
                 </div>
+
               </Link>
 
-              {/* Gas Exchange Lab */}
+              {/* GAS EXCHANGE LAB */}
+
               <Link
                 href="/respiratory"
                 className="group rounded-2xl border border-white/10 bg-white/2.5 p-6 text-left transition hover:border-cyan-400/20 hover:bg-cyan-400/3"
               >
-                <Wind size={25} className="text-cyan-400" />
+
+                <Wind
+                  size={25}
+                  className="text-cyan-400"
+                />
 
                 <h3 className="mt-5 font-semibold">
                   Gas Exchange Lab
@@ -702,13 +973,16 @@ export default function HomePage() {
                   Run experiment
                   <ArrowRight size={15} />
                 </span>
+
               </Link>
 
-              {/* Clinical Learning Centre */}
+              {/* CLINICAL LEARNING CENTRE */}
+
               <Link
                 href="/clinical"
                 className="group rounded-2xl border border-violet-400/20 bg-linear-to-br from-violet-400/8 to-white/2.5 p-6 text-left transition hover:-translate-y-1 hover:border-violet-400/40 hover:bg-violet-400/10"
               >
+
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-400/10 text-violet-300">
                   <Stethoscope size={22} />
                 </div>
@@ -728,29 +1002,40 @@ export default function HomePage() {
 
                 <span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-violet-300 transition group-hover:text-violet-200">
                   Enter clinical centre
+
                   <ArrowRight
                     size={15}
                     className="transition-transform group-hover:translate-x-1"
                   />
                 </span>
+
               </Link>
+
             </div>
+
           </section>
 
-          {/* Clinical Learning feature banner */}
+          {/* ------------------------------------------------
+              CLINICAL LEARNING FEATURE
+          ------------------------------------------------ */}
+
           <section className="mt-10">
+
             <Link
               href="/clinical"
               className="group relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-violet-400/15 bg-violet-400/4 p-6 transition hover:border-violet-400/30 sm:flex-row sm:items-center sm:justify-between sm:p-8"
             >
+
               <div className="pointer-events-none absolute -right-12 -top-20 h-48 w-48 rounded-full bg-violet-400/10 blur-3xl" />
 
               <div className="relative flex items-start gap-4">
+
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-400/10 text-violet-300">
                   <Stethoscope size={24} />
                 </div>
 
                 <div>
+
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">
                     Beyond the laboratory
                   </p>
@@ -764,21 +1049,30 @@ export default function HomePage() {
                     Echo Academy lessons, quizzes and educational
                     case studies.
                   </p>
+
                 </div>
+
               </div>
 
               <span className="relative inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-violet-300 transition group-hover:text-violet-200">
                 Explore clinical learning
+
                 <ArrowRight
                   size={17}
                   className="transition-transform group-hover:translate-x-1"
                 />
               </span>
+
             </Link>
+
           </section>
 
-          {/* Footer */}
+          {/* ------------------------------------------------
+              FOOTER
+          ------------------------------------------------ */}
+
           <footer className="mt-16 border-t border-white/10 py-8 text-center">
+
             <p className="text-xs text-slate-600">
               Physiolab · Interactive Human Physiology Learning Platform
             </p>
@@ -787,9 +1081,13 @@ export default function HomePage() {
               Educational resource only. Clinical case materials are
               intended for learning, not independent diagnosis.
             </p>
+
           </footer>
+
         </div>
+
       </div>
+
     </main>
   );
 }
